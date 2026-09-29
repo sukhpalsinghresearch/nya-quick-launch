@@ -18,11 +18,22 @@ function endpoint() {
 
 function visitorId() {
   const key = 'nya-anonymous-visitor';
-  const existing = window.localStorage.getItem(key);
-  if (existing) return existing;
-  const created = window.crypto.randomUUID();
-  window.localStorage.setItem(key, created);
-  return created;
+  try {
+    const existing = window.localStorage.getItem(key);
+    if (existing) return existing;
+
+    const randomBytes =
+      typeof window.crypto?.getRandomValues === 'function'
+        ? Array.from(window.crypto.getRandomValues(new Uint8Array(16)), (byte) => byte.toString(16).padStart(2, '0')).join('')
+        : Array.from({ length: 32 }, () => Math.floor(Math.random() * 16).toString(16)).join('');
+
+    const fallback = randomBytes.length >= 16 ? randomBytes : ('visitor-' + Math.random().toString(36).slice(2));
+    const created = window.crypto?.randomUUID?.() ?? fallback;
+    window.localStorage.setItem(key, created);
+    return created;
+  } catch {
+    return 'visitor-' + Math.random().toString(36).slice(2);
+  }
 }
 
 export function ViewCounter() {

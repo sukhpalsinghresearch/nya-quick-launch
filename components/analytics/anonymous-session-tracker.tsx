@@ -14,13 +14,16 @@ function getOrCreateSessionId(): string {
     if (existing && existing.length >= 16) {
       return existing;
     }
-    const created =
-      window.crypto.randomUUID?.() ??
-      Array.from(window.crypto.getRandomValues(new Uint8Array(16)), (b) => b.toString(16).padStart(2, '0')).join('');
+    const randomBytes =
+      typeof window.crypto?.getRandomValues === 'function'
+        ? Array.from(window.crypto.getRandomValues(new Uint8Array(16)), (b) => b.toString(16).padStart(2, '0')).join('')
+        : Array.from({ length: 32 }, () => Math.floor(Math.random() * 16).toString(16)).join('');
+
+    const created = window.crypto?.randomUUID?.() ?? randomBytes;
     window.localStorage.setItem(SESSION_STORAGE_KEY, created);
     return created;
   } catch {
-    return window.crypto.randomUUID?.() ?? 'anonymous-fallback-id';
+    return 'anon-' + Math.random().toString(36).slice(2) + Date.now().toString(36);
   }
 }
 
