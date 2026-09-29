@@ -3,24 +3,60 @@
 import { useMemo, useState, type ReactNode } from 'react';
 import { ArrowRight, Check, CircleAlert, X } from 'lucide-react';
 
-type Tool = 'process' | 'agile' | 'story' | 'requirements' | 'dfd' | 'nfr' | 'uml-bridge';
+type Tool = 'foundations' | 'process' | 'agile' | 'story' | 'requirements' | 'elicitation' | 'model-choice' | 'dfd' | 'nfr' | 'uml-interaction' | 'uml-state' | 'uml-architecture';
 
 export function LessonInteraction({ tool }: { tool?: Tool }) {
   if (!tool) return null;
   const labs: Record<Tool, ReactNode> = {
+    foundations: <FoundationsLab />,
     process: <ProcessModelLab />,
     agile: <AgileSprintLab />,
     story: <UserStoryLab />,
     requirements: <RequirementsLab />,
+    elicitation: <ElicitationLab />,
+    'model-choice': <ModelChoiceLab />,
     dfd: <DfdLab />,
     nfr: <NfrLab />,
-    'uml-bridge': <UmlBridgeLab />,
+    'uml-interaction': <UmlBridgeLab initialView="interaction" />,
+    'uml-state': <UmlBridgeLab initialView="state" />,
+    'uml-architecture': <UmlBridgeLab initialView="architecture" />,
   };
   return <section className="lesson-lab">{labs[tool]}</section>;
 }
 
 function LabHeader({ eyebrow, title, copy }: { eyebrow: string; title: string; copy: string }) {
   return <header className="lesson-lab-header"><span>{eyebrow}</span><h2>{title}</h2><p>{copy}</p></header>;
+}
+
+const foundationChecks = [
+  {
+    prompt: 'A lecturer asks for an attendance app. What should happen first?',
+    options: ['Choose React', 'Clarify users, rules and evidence of success', 'Create the database'],
+    answer: 1,
+    reason: 'Engineering begins by understanding the problem, stakeholders and constraints. Technology follows that decision.',
+  },
+  {
+    prompt: 'The team proves that the code matches the written specification. What is this?',
+    options: ['Validation', 'Verification', 'Maintenance'],
+    answer: 1,
+    reason: 'Verification asks whether the product was built according to its specification. Validation asks whether the right product was built.',
+  },
+  {
+    prompt: 'Students can submit attendance, but the workflow does not match how classes operate. What failed?',
+    options: ['Validation', 'Compilation', 'Version control'],
+    answer: 0,
+    reason: 'The software may run correctly and still solve the wrong operational problem. That is a validation failure.',
+  },
+];
+
+function FoundationsLab() {
+  const [index, setIndex] = useState(0);
+  const [choice, setChoice] = useState<number | null>(null);
+  const item = foundationChecks[index];
+  return <>
+    <LabHeader eyebrow="ENGINEERING CHECK" title="Decide before you code." copy="Use a small case to separate requirements, design choices, verification and validation." />
+    <article className="requirement-card"><span>CASE {index + 1} / {foundationChecks.length}</span><h3>{item.prompt}</h3><div className="choice-row stacked-choices">{item.options.map((option, optionIndex) => <button type="button" className={choice === optionIndex ? 'selected' : ''} disabled={choice !== null} key={option} onClick={() => setChoice(optionIndex)}>{option}</button>)}</div><p aria-live="polite">{choice === null ? 'Choose the action or concept that best fits.' : `${choice === item.answer ? 'Correct.' : 'Not quite.'} ${item.reason}`}</p><footer><strong>{choice === null ? 'Reason from the situation' : choice === item.answer ? 'Decision defended' : 'Read the distinction once more'}</strong><button type="button" disabled={choice === null} onClick={() => { setIndex((index + 1) % foundationChecks.length); setChoice(null); }}>Next case <ArrowRight aria-hidden="true" /></button></footer></article>
+  </>;
 }
 
 function ProcessModelLab() {
@@ -35,6 +71,13 @@ function ProcessModelLab() {
     if (stability === 'changing' && feedback === 'frequent') return { model: 'Agile / Iterative', reason: 'Frequent feedback and changing requirements favor short increments that can be reviewed and changed.' };
     return { model: 'Incremental / Prototyping', reason: 'Deliver a thin, useful slice early, learn from it, then expand the system without pretending uncertainty is gone.' };
   }, [assurance, feedback, risk, stability]);
+  const paths: Record<string, string[]> = {
+    'Waterfall': ['Requirements', 'System design', 'Implementation', 'Testing', 'Deployment'],
+    'V-model': ['Specify', 'Plan matching tests', 'Implement', 'Run unit to acceptance tests', 'Release'],
+    'Spiral': ['Set objectives', 'Analyze risks', 'Engineer a solution', 'Review with stakeholders', 'Plan the next loop'],
+    'Agile / Iterative': ['Order backlog', 'Plan a short cycle', 'Build and test', 'Review the increment', 'Adapt'],
+    'Incremental / Prototyping': ['Choose a thin slice', 'Prototype or design it', 'Build and validate', 'Integrate', 'Choose the next slice'],
+  };
 
   return <>
     <LabHeader eyebrow="PROCESS MODEL DECISION" title="Choose the model from the project, not the definition." copy="Change the project conditions. The recommendation should change because the trade-off changes." />
@@ -45,6 +88,7 @@ function ProcessModelLab() {
       <label>Assurance need<select value={assurance} onChange={(event) => setAssurance(event.target.value)}><option value="normal">Normal</option><option value="high">Safety, regulation or strict verification</option></select></label>
     </div>
     <div className="lab-result"><span>BEST FIT</span><h3>{result.model}</h3><p>{result.reason}</p></div>
+    <div className="process-path" aria-label={`${result.model} working flow`}>{paths[result.model].map((step, index) => <div key={step}><small>{String(index + 1).padStart(2, '0')}</small><strong>{step}</strong>{index < paths[result.model].length - 1 && <ArrowRight aria-hidden="true" />}</div>)}</div>
     <p className="lab-rule"><CircleAlert aria-hidden="true" /> This is a reasoned starting point, not an automatic answer. Defend it with the four conditions above.</p>
   </>;
 }
@@ -102,18 +146,57 @@ const requirementQuestions = [
 function RequirementsLab() {
   const [index, setIndex] = useState(0);
   const [score, setScore] = useState(0);
+  const [selectedChoice, setSelectedChoice] = useState<string | null>(null);
   const [feedback, setFeedback] = useState('Choose the most accurate classification.');
   const item = requirementQuestions[index];
   const select = (choice: string) => {
+    if (selectedChoice !== null) return;
+    setSelectedChoice(choice);
     const correct = choice === item.answer;
     if (correct) setScore((value) => value + 1);
     setFeedback(`${correct ? 'Correct.' : 'Not quite.'} ${item.reason}`);
   };
-  const next = () => { setIndex((value) => (value + 1) % requirementQuestions.length); setFeedback('Choose the most accurate classification.'); };
+  const next = () => { setIndex((value) => (value + 1) % requirementQuestions.length); setSelectedChoice(null); setFeedback('Choose the most accurate classification.'); };
   return <>
     <LabHeader eyebrow="REQUIREMENT CHECK" title="Classify the statement before you model it." copy="A stakeholder need, a functional requirement, a quality target and a technical constraint are different things." />
-    <article className="requirement-card"><span>STATEMENT {index + 1} / {requirementQuestions.length}</span><h3>{item.text}</h3><div className="choice-row">{['functional', 'non-functional', 'constraint'].map((choice) => <button type="button" key={choice} onClick={() => select(choice)}>{choice}</button>)}</div><p aria-live="polite">{feedback}</p><footer><strong>Score: {score}</strong><button type="button" onClick={next}>Next statement <ArrowRight aria-hidden="true" /></button></footer></article>
+    <article className="requirement-card"><span>STATEMENT {index + 1} / {requirementQuestions.length}</span><h3>{item.text}</h3><div className="choice-row">{['functional', 'non-functional', 'constraint'].map((choice) => <button type="button" className={selectedChoice === choice ? 'selected' : ''} disabled={selectedChoice !== null} key={choice} onClick={() => select(choice)}>{choice}</button>)}</div><p aria-live="polite">{feedback}</p><footer><strong>Score: {score}</strong><button type="button" disabled={selectedChoice === null} onClick={next}>Next statement <ArrowRight aria-hidden="true" /></button></footer></article>
     <p className="lab-rule"><CircleAlert aria-hidden="true" /> Ask two questions: what must the system do, and how well or under what restriction must it do it?</p>
+  </>;
+}
+
+const elicitationCases = [
+  { situation: 'Nurses perform a fast handover that they find difficult to explain step by step.', technique: 'Observation followed by interview', reason: 'Observation reveals tacit work. The interview then checks why exceptions and shortcuts occur.', question: 'What changes when the ward is understaffed?' },
+  { situation: 'Finance and operations disagree about who may approve a refund.', technique: 'Facilitated workshop', reason: 'The conflict must be made visible and negotiated with both decision makers in the room.', question: 'Which amount or risk level changes the approval owner?' },
+  { situation: 'You need comparable feedback from 2,000 existing users.', technique: 'Questionnaire, then targeted interviews', reason: 'A questionnaire gives coverage. Interviews explain important or surprising patterns.', question: 'Which result would make us contact you for a follow-up?' },
+  { situation: 'A replacement system must preserve legal rules embedded in current forms.', technique: 'Document analysis plus domain interview', reason: 'Documents expose formal rules, while an expert identifies rules that are obsolete or interpreted differently.', question: 'Which fields are legally required, and which are only historical?' },
+];
+
+function ElicitationLab() {
+  const [index, setIndex] = useState(0);
+  const item = elicitationCases[index];
+  return <>
+    <LabHeader eyebrow="ELICITATION PLANNER" title="Choose a technique for the missing knowledge." copy="No single gathering method is always correct. Match it to access, scale, tacit work and stakeholder conflict." />
+    <div className="elicitation-lab"><article><span>SITUATION</span><h3>{item.situation}</h3><div className="choice-row stacked-choices">{elicitationCases.map((candidate, candidateIndex) => <button type="button" className={index === candidateIndex ? 'selected' : ''} key={candidate.situation} onClick={() => setIndex(candidateIndex)}>Case {candidateIndex + 1}</button>)}</div></article><article className="lab-result"><span>BEST STARTING METHOD</span><h3>{item.technique}</h3><p>{item.reason}</p><strong>Ask next: {item.question}</strong></article></div>
+  </>;
+}
+
+const modelQuestions = [
+  { question: 'Who wants what from the system, and what sits outside its boundary?', answer: 'Use case', why: 'Use case diagrams organize actor goals and system scope.' },
+  { question: 'What work, decisions and parallel paths complete one workflow?', answer: 'Activity', why: 'Activity diagrams focus on control flow through a process.' },
+  { question: 'What information moves between entities, processes and stores?', answer: 'DFD', why: 'A data flow diagram follows data transformation and storage.' },
+  { question: 'Which objects, attributes and stable relationships form the domain?', answer: 'Class', why: 'Class diagrams describe static structure and responsibility.' },
+  { question: 'In what order do participants exchange messages for one scenario?', answer: 'Sequence', why: 'Sequence diagrams put message order and lifelines at the center.' },
+  { question: 'How does one object react to events during its lifetime?', answer: 'State', why: 'State diagrams follow the changing condition of one object.' },
+];
+
+function ModelChoiceLab() {
+  const [index, setIndex] = useState(0);
+  const [choice, setChoice] = useState<string | null>(null);
+  const item = modelQuestions[index];
+  const options = ['Use case', 'Activity', 'DFD', 'Class', 'Sequence', 'State'];
+  return <>
+    <LabHeader eyebrow="MODEL SELECTOR" title="Start with the question, then choose the notation." copy="A diagram is useful only when its notation answers the question being discussed." />
+    <article className="requirement-card"><span>QUESTION {index + 1} / {modelQuestions.length}</span><h3>{item.question}</h3><div className="choice-row model-choice-grid">{options.map((option) => <button type="button" className={choice === option ? 'selected' : ''} disabled={choice !== null} key={option} onClick={() => setChoice(option)}>{option}</button>)}</div><p aria-live="polite">{choice === null ? 'Choose one model.' : `${choice === item.answer ? 'Correct.' : `Use ${item.answer}.`} ${item.why}`}</p><footer><strong>{choice === null ? 'One question, one strongest view' : `Answer: ${item.answer}`}</strong><button type="button" disabled={choice === null} onClick={() => { setIndex((index + 1) % modelQuestions.length); setChoice(null); }}>Next question <ArrowRight aria-hidden="true" /></button></footer></article>
   </>;
 }
 
@@ -157,8 +240,8 @@ function NfrLab() {
   </>;
 }
 
-function UmlBridgeLab() {
-  const [view, setView] = useState<'interaction' | 'state' | 'architecture'>('interaction');
+function UmlBridgeLab({ initialView }: { initialView: 'interaction' | 'state' | 'architecture' }) {
+  const [view, setView] = useState<'interaction' | 'state' | 'architecture'>(initialView);
   const [state, setState] = useState('Draft');
   const [activeComponent, setActiveComponent] = useState('Web client');
   const transitions: Record<string, string> = { Draft: 'submit', Submitted: 'approve', Approved: 'publish', Published: 'archive', Archived: 'restore' };

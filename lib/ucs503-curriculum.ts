@@ -14,13 +14,18 @@ export type Lesson = {
   concepts: string[];
   mistakes: string[];
   tool?:
+    | 'foundations'
     | 'process'
     | 'agile'
     | 'story'
     | 'requirements'
+    | 'elicitation'
+    | 'model-choice'
     | 'dfd'
     | 'nfr'
-    | 'uml-bridge';
+    | 'uml-interaction'
+    | 'uml-state'
+    | 'uml-architecture';
   diagramHref?: string;
 };
 
@@ -94,6 +99,7 @@ export const ucs503Modules: CourseModule[] = [
         objectives: ['Separate product work from one-off coding.', 'Identify stakeholders, constraints and evidence of quality.'],
         concepts: ['software process', 'stakeholder', 'quality', 'maintenance', 'constraint'],
         mistakes: ['Treating a process as paperwork rather than a way to reduce uncertainty.'],
+        tool: 'foundations',
       },
       {
         id: 'software-engineering-basics',
@@ -105,6 +111,7 @@ export const ucs503Modules: CourseModule[] = [
         objectives: ['State scope, assumptions and quality criteria.', 'Separate a feature from the requirement it serves.'],
         concepts: ['scope', 'assumption', 'verification', 'validation', 'quality attribute'],
         mistakes: ['Calling a technology choice a requirement without a reason.'],
+        tool: 'foundations',
       },
       {
         id: 'process-models',
@@ -173,7 +180,7 @@ export const ucs503Modules: CourseModule[] = [
         objectives: ['Match an elicitation technique to a situation.', 'Write questions that reveal rules, exceptions and constraints.'],
         concepts: ['interview', 'observation', 'workshop', 'questionnaire', 'document analysis'],
         mistakes: ['Only asking users what screen they want.', 'Skipping exceptions and failure cases.'],
-        tool: 'requirements',
+        tool: 'elicitation',
       },
       {
         id: 'requirement-modeling',
@@ -185,7 +192,7 @@ export const ucs503Modules: CourseModule[] = [
         objectives: ['Choose a model based on the question being asked.', 'Trace a statement into a use case, DFD or workflow.'],
         concepts: ['context', 'behaviour', 'data flow', 'structure', 'traceability'],
         mistakes: ['Using one diagram to answer every question.'],
-        tool: 'requirements',
+        tool: 'model-choice',
       },
       useCaseActivity,
       {
@@ -246,7 +253,7 @@ export const ucs503Modules: CourseModule[] = [
         objectives: ['Model one scenario in both views.', 'Explain the message order and participating objects.'],
         concepts: ['lifeline', 'message', 'activation', 'link', 'message numbering'],
         mistakes: ['Drawing a collaboration diagram as a compressed sequence diagram.'],
-        tool: 'uml-bridge',
+        tool: 'uml-interaction',
         diagramHref: '/courses/ucs503-software-engineering/system-lab?diagram=sequence',
       },
       {
@@ -259,7 +266,7 @@ export const ucs503Modules: CourseModule[] = [
         objectives: ['Separate state from action.', 'Use event, guard and transition correctly.'],
         concepts: ['state', 'event', 'transition', 'guard', 'entry action'],
         mistakes: ['Putting every system action into a state machine.'],
-        tool: 'uml-bridge',
+        tool: 'uml-state',
       },
       {
         id: 'component-deployment',
@@ -271,7 +278,7 @@ export const ucs503Modules: CourseModule[] = [
         objectives: ['Separate component dependency from class relationship.', 'Place artifacts on realistic nodes.', 'Identify a single point of failure.'],
         concepts: ['component', 'interface', 'dependency', 'node', 'artifact', 'execution environment'],
         mistakes: ['Using deployment nodes as classes.', 'Calling a database table a component.'],
-        tool: 'uml-bridge',
+        tool: 'uml-architecture',
       },
     ],
   },

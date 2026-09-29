@@ -170,7 +170,7 @@ export function ActivityDiagramLab({
                 )}
               </div>
               <div>
-                <span>PARALLEL OR SUPPORTING WORK</span>
+                <span>EXPLICIT PARALLEL WORK</span>
                 {flow.parallel.length ? (
                   flow.parallel.map((branch) => (
                     <article key={branch.label}>
@@ -179,7 +179,7 @@ export function ActivityDiagramLab({
                     </article>
                   ))
                 ) : (
-                  <p>No parallel supporting work is stated.</p>
+                  <p>No parallel work is stated in the written scenario, so no fork or join is invented.</p>
                 )}
               </div>
               <p className="process-rule">

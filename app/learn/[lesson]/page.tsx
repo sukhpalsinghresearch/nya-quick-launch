@@ -1,10 +1,12 @@
 import type { Metadata } from 'next';
-import { ArrowLeft, ArrowRight, BookOpen, ExternalLink, Lightbulb } from 'lucide-react';
+import { ArrowLeft, ArrowRight, BookOpen, Lightbulb } from 'lucide-react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
 import { LessonInteraction } from '@/components/learning/ucs503-interactions';
+import { ResourceDeck } from '@/components/learning/resource-deck';
 import { lessonForId, moduleForLesson } from '@/lib/ucs503-curriculum';
+import { lessonResources } from '@/lib/ucs503-resources';
 import { SiteFooter, SiteHeader } from '@/app/site-chrome';
 
 export async function generateMetadata({ params }: { params: Promise<{ lesson: string }> }): Promise<Metadata> {
@@ -17,6 +19,19 @@ export default async function LessonPage({ params }: { params: Promise<{ lesson:
   const lesson = lessonForId((await params).lesson);
   if (!lesson) notFound();
   const courseModule = moduleForLesson(lesson.id);
+  const diagramLinks = lesson.id === 'use-case-activity'
+    ? [
+        { label: 'Open use case studio', href: '/courses/ucs503-software-engineering/system-lab?diagram=use-case' },
+        { label: 'Open activity studio', href: '/courses/ucs503-software-engineering/system-lab?diagram=activity' },
+      ]
+    : lesson.id === 'case-studies'
+      ? [
+          { label: 'Inspect the use case', href: '/courses/ucs503-software-engineering/system-lab?diagram=use-case' },
+          { label: 'Carry it into activity flow', href: '/courses/ucs503-software-engineering/system-lab?diagram=activity' },
+        ]
+      : lesson.diagramHref
+        ? [{ label: `Open ${lesson.title}`, href: lesson.diagramHref }]
+        : [];
   return <main className="lesson-page">
     <SiteHeader active="resources" />
     <section className="lesson-hero">
@@ -32,8 +47,8 @@ export default async function LessonPage({ params }: { params: Promise<{ lesson:
       <article className="mistake-card"><h2>Common mistakes</h2><ul>{lesson.mistakes.map((item) => <li key={item}>{item}</li>)}</ul></article>
     </section>
     <LessonInteraction tool={lesson.tool} />
-    {lesson.diagramHref && <section className="diagram-launch"><div><span>INTERACTIVE UML LAB</span><h2>Take this idea into the diagram.</h2><p>The lab uses familiar systems so you can inspect every actor, relationship, message and ownership handoff.</p></div><Link href={lesson.diagramHref}>Open {lesson.title} <ArrowRight aria-hidden="true" /></Link></section>}
-    <section className="source-placeholder"><div><span>VIDEOS AND SOURCES</span><h2>Verified links are being added with the finalized class notes.</h2><p>Each lesson will have one short explanation, one deeper source and a clear reason to use each.</p></div><span><ExternalLink aria-hidden="true" /> No generic playlist</span></section>
+    {diagramLinks.length > 0 && <section className="diagram-launch"><div><span>INTERACTIVE UML LAB</span><h2>Take this idea into the diagram.</h2><p>The lab uses familiar systems so you can inspect every actor, relationship, message and ownership handoff.</p></div><div className="diagram-launch-links">{diagramLinks.map((item) => <Link href={item.href} key={item.href}>{item.label} <ArrowRight aria-hidden="true" /></Link>)}</div></section>}
+    <ResourceDeck resources={lessonResources[lesson.id] ?? []} />
     <SiteFooter />
   </main>;
 }

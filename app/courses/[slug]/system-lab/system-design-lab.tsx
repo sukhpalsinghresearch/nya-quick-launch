@@ -1276,6 +1276,7 @@ export function SystemDesignLab({
           : 'use-case',
       );
     };
+    sync();
     window.addEventListener('popstate', sync);
     return () => window.removeEventListener('popstate', sync);
   }, []);

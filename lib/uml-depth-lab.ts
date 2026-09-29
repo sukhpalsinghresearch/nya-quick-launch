@@ -4059,7 +4059,7 @@ function makeCase(
       : `The actor requests ${name}.`,
     mainFlow: [
       `The actor starts ${name}.`,
-      `The platform boundary validates the request and current ${seed.subject} state.`,
+      'The platform boundary validates the request against the current system state.',
       `${service.label} performs its responsibility: ${service.responsibility.toLowerCase()}`,
       tier === 1
         ? 'The system records the visible result.'

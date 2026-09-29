@@ -9,6 +9,18 @@ export const metadata = {
   description: 'Interactive UCS503 revision for process models, requirements engineering and UML modeling.',
 };
 
+const diagramPractice = [
+  { name: 'Use case', level: 'full studio', href: '/courses/ucs503-software-engineering/system-lab?diagram=use-case', question: 'Who wants what from the system?' },
+  { name: 'Sequence', level: 'full studio', href: '/courses/ucs503-software-engineering/system-lab?diagram=sequence', question: 'Who sends which message, and when?' },
+  { name: 'Class', level: 'full studio', href: '/courses/ucs503-software-engineering/system-lab?diagram=class', question: 'What structure supports the scenario?' },
+  { name: 'Activity', level: 'full studio', href: '/courses/ucs503-software-engineering/system-lab?diagram=activity', question: 'What work, choice or parallel path occurs?' },
+  { name: 'Swimlane', level: 'full studio', href: '/courses/ucs503-software-engineering/system-lab?diagram=swimlane', question: 'Who owns each activity and handoff?' },
+  { name: 'DFD', level: 'guided builder', href: '/learn/dfd', question: 'Where does data enter, change and persist?' },
+  { name: 'Collaboration', level: 'guided comparison', href: '/learn/interaction-diagrams', question: 'Which linked object owns each numbered message?' },
+  { name: 'State', level: 'guided simulator', href: '/learn/state-diagrams', question: 'How does one object react to events?' },
+  { name: 'Component and deployment', level: 'guided explorer', href: '/learn/component-deployment', question: 'What is the software split, and where does it run?' },
+];
+
 export default function ResourcesPage() {
   return <main className="quick-site ucs503-page">
     <SiteHeader active="resources" />
@@ -22,8 +34,12 @@ export default function ResourcesPage() {
       {ucs503Modules.map((module) => <article key={module.id}>
         <header><span>MODULE {module.number}</span><h2>{module.title}</h2><p>{module.subtitle}</p></header>
         <div className="module-exam-focus"><strong>Exam focus</strong><p>{module.examFocus}</p></div>
-        <ol>{module.lessons.map((lesson) => <li key={`${module.id}-${lesson.id}`}><span>{lesson.lecture}</span><div><small>{lesson.kind}</small><h3>{lesson.title}</h3><p>{lesson.question}</p></div><Link href={`/learn/${lesson.id}`}>Learn <ArrowRight aria-hidden="true" /></Link></li>)}</ol>
+        <ol>{module.lessons.map((lesson) => <li key={`${module.id}-${lesson.id}`}><span>{lesson.lecture}</span><div><small>{lesson.kind === 'diagram' ? 'full diagram studio' : 'guided interactive'}</small><h3>{lesson.title}</h3><p>{lesson.question}</p></div><Link href={`/learn/${lesson.id}`}>Learn <ArrowRight aria-hidden="true" /></Link></li>)}</ol>
       </article>)}
+    </section>
+    <section className="diagram-practice-index">
+      <header><span>DIAGRAM PRACTICE</span><h2>Choose the question, then open the right diagram.</h2><p>Full studios let you change the platform, scenario and depth. Guided exercises teach one notation rule at a time.</p></header>
+      <div>{diagramPractice.map((item) => <Link href={item.href} key={item.name}><small>{item.level}</small><h3>{item.name}</h3><p>{item.question}</p><ArrowRight aria-hidden="true" /></Link>)}</div>
     </section>
     <section className="course-entry"><BookOpen aria-hidden="true" /><div><span>CONNECTED DIAGRAM STUDIO</span><h2>Use one scenario across five live diagrams.</h2></div><Link href="/courses/ucs503-software-engineering">Open the UML lab <ArrowRight aria-hidden="true" /></Link></section>
     <SiteFooter />

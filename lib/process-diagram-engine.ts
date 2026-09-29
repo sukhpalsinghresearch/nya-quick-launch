@@ -22,6 +22,17 @@ export type ActivityFlow = {
 };
 
 export function buildActivityFlow(item: DepthCase): ActivityFlow {
+  const scenarioText = [
+    ...item.mainFlow,
+    ...item.alternateFlows,
+    ...item.exceptionFlows,
+  ]
+    .join(' ')
+    .toLowerCase();
+  const hasExplicitParallelWork =
+    /parallel|concurrent|asynchronously|in the background|at the same time/.test(
+      scenarioText,
+    );
   const nodes: ActivityNode[] = [
     {
       id: 'start',
@@ -48,7 +59,7 @@ export function buildActivityFlow(item: DepthCase): ActivityFlow {
       confidence: 'observable',
     }),
   );
-  if (item.supportingServices.length) {
+  if (hasExplicitParallelWork && item.supportingServices.length) {
     nodes.splice(Math.max(2, nodes.length - 1), 0, {
       id: 'fork',
       kind: 'fork',
@@ -85,22 +96,17 @@ export function buildActivityFlow(item: DepthCase): ActivityFlow {
       returnsToMain: false,
     })),
   ];
-  const loopText = [
-    ...item.mainFlow,
-    ...item.alternateFlows,
-    ...item.exceptionFlows,
-  ]
-    .join(' ')
-    .toLowerCase();
   return {
     nodes,
     alternate,
-    parallel: item.supportingServices.map((service) => ({
-      label: service,
-      steps: [`Perform ${service.toLowerCase()} work`, 'Record its outcome'],
-      returnsToMain: true,
-    })),
-    hasLoop: /retry|repeat|again|resume|reconnect|next item/.test(loopText),
+    parallel: hasExplicitParallelWork
+      ? item.supportingServices.map((service) => ({
+          label: service,
+          steps: [`Perform ${service.toLowerCase()} work`, 'Record its outcome'],
+          returnsToMain: true,
+        }))
+      : [],
+    hasLoop: /retry|repeat|again|resume|reconnect|next item/.test(scenarioText),
   };
 }
 
