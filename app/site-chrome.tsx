@@ -18,6 +18,7 @@ export function SiteHeader({ active = 'home' }: { active?: 'home' | 'resources' 
         <Link className={active === 'home' ? 'active' : ''} href="/">Home</Link>
         <Link className={active === 'resources' || active === 'courses' ? 'active' : ''} href="/resources">UCS503 resources</Link>
         <a href="https://bios.notyouraverage.xyz" target="_blank" rel="noreferrer">BIOS <ExternalLink aria-hidden="true" /></a>
+        <ViewCounter />
       </nav>
       <button className="quick-menu" type="button" aria-label="Toggle navigation" aria-expanded={open} onClick={() => setOpen((value) => !value)}>
         <Menu aria-hidden="true" />
@@ -31,7 +32,6 @@ export function SiteFooter() {
     <footer className="quick-footer">
       <div className="quick-brand"><strong>NOT / AVERAGE</strong><span>WE CAN DO BETTER</span></div>
       <p>Built for the people who believe average is not the limit.</p>
-      <ViewCounter />
       <div><Link href="/resources">UCS503 resources</Link><a href="https://bios.notyouraverage.xyz">BIOS</a></div>
     </footer>
   );

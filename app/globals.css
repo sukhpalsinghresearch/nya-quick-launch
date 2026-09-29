@@ -592,7 +592,7 @@ a {
 }
 .quick-footer {
   display: grid;
-  grid-template-columns: 1fr minmax(220px, 1fr) auto auto;
+  grid-template-columns: 1fr minmax(220px, 1fr) auto;
   gap: 30px;
   align-items: center;
   border-top: 1px solid #1c1b1b;
@@ -611,10 +611,12 @@ a {
   display: flex;
   gap: 16px;
   align-items: center;
+  border-left: 1px solid #b4a69e;
   color: #1f3a32;
   font-family: monospace;
   font-size: 12px;
   font-weight: 900;
+  padding-left: 20px;
   text-transform: uppercase;
 }
 .view-counter span {
@@ -655,6 +657,11 @@ a {
   .quick-nav a {
     border-bottom: 1px solid #b4a69e;
     padding: 16px 0;
+  }
+  .quick-nav .view-counter {
+    justify-content: flex-start;
+    border-left: 0;
+    padding: 16px 0 4px;
   }
   .nya-intro {
     min-height: auto;
