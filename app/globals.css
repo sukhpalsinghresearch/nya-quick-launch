@@ -527,7 +527,7 @@ a {
 }
 .quick-footer {
   display: grid;
-  grid-template-columns: 1fr minmax(220px, 1fr) auto;
+  grid-template-columns: 1fr minmax(220px, 1fr) auto auto;
   gap: 30px;
   align-items: center;
   border-top: 1px solid #1c1b1b;
@@ -592,11 +592,6 @@ a {
   .quick-nav a {
     border-bottom: 1px solid #b4a69e;
     padding: 16px 0;
-  }
-  .quick-nav .view-counter {
-    justify-content: flex-start;
-    border-left: 0;
-    padding: 16px 0 4px;
   }
   .nya-intro {
     min-height: auto;
