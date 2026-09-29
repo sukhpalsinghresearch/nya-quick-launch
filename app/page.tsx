@@ -45,11 +45,6 @@ export default function Home() {
       </section>
 
       <section className="bios-feature" aria-labelledby="bios-title">
-        <a className="bios-art-link" href="https://bios.notyouraverage.xyz" target="_blank" rel="noreferrer" aria-label="Visit the BIOS hackathon website">
-          {/* oxlint-disable-next-line next/no-img-element -- local hero asset; next/image is incompatible with the current vinext dev runtime */}
-          <img src="/images/bios-landing-with-background.png" alt="BIOS, where life and computation meet" width="1679" height="943" />
-          <span>Enter the BIOS website <ExternalLink aria-hidden="true" /></span>
-        </a>
         <div className="bios-teaser-copy">
           <div>
             <p className="bios-label">BIOS V2 · THAPAR INSTITUTE, PATIALA</p>
@@ -57,13 +52,17 @@ export default function Home() {
             <p>We are organising BIOS again this year. Choose a track, form a team and turn a real problem into something that works.</p>
           </div>
           <div className="bios-actions">
-            <a className="bios-register" href="https://bios.notyouraverage.xyz/tracks" target="_blank" rel="noreferrer">
-              Register for BIOS <ExternalLink aria-hidden="true" />
-            </a>
             <a className="bios-volunteer" href="https://csatnypudj.zite.so" target="_blank" rel="noreferrer">
               Volunteer for BIOS <HandHeart aria-hidden="true" />
             </a>
           </div>
+        </div>
+        <div className="bios-art-stage">
+          {/* oxlint-disable-next-line next/no-img-element -- transparent local artwork; next/image is incompatible with the current vinext dev runtime */}
+          <img src="/images/bios-landing-no-background.png" alt="A living figure and a machine figure reaching toward each other" width="1679" height="943" />
+          <a className="bios-visit" href="https://bios.notyouraverage.xyz" target="_blank" rel="noreferrer">
+            Visit the BIOS website <ExternalLink aria-hidden="true" />
+          </a>
         </div>
       </section>
 
