@@ -305,7 +305,8 @@ a {
 }
 .bios-art-stage {
   position: relative;
-  min-height: clamp(520px, 56vw, 900px);
+  min-height: clamp(300px, 32vw, 520px);
+  border-top: 0;
 }
 .bios-art-stage img {
   position: absolute;
@@ -313,7 +314,8 @@ a {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: center top;
+  object-position: center;
+  filter: saturate(.92) contrast(1.02);
 }
 .bios-visit {
   position: absolute;
@@ -630,12 +632,13 @@ a {
     padding: 30px 22px;
   }
   .bios-art-stage {
-    min-height: 540px;
+    min-height: 360px;
   }
   .bios-art-stage img {
-    width: 150%;
+    width: 142%;
     max-width: none;
     left: 50%;
+    object-position: center;
     transform: translateX(-50%);
   }
   .bios-visit {

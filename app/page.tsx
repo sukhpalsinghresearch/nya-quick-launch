@@ -58,8 +58,8 @@ export default function Home() {
           </div>
         </div>
         <div className="bios-art-stage">
-          {/* oxlint-disable-next-line next/no-img-element -- transparent local artwork; next/image is incompatible with the current vinext dev runtime */}
-          <img src="/images/bios-landing-no-background.png" alt="A living figure and a machine figure reaching toward each other" width="1679" height="943" />
+          {/* oxlint-disable-next-line next/no-img-element -- local teaser artwork; next/image is incompatible with the current vinext dev runtime */}
+          <img src="/images/bios-frag-hands.jpg" alt="A human hand and a machine hand reaching toward each other" width="639" height="217" />
           <a className="bios-visit" href="https://bios.notyouraverage.xyz" target="_blank" rel="noreferrer">
             Visit the BIOS website <ExternalLink aria-hidden="true" />
           </a>
