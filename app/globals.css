@@ -172,31 +172,67 @@ a {
   font-size: clamp(20px, 2vw, 27px);
   line-height: 1.48;
 }
-.intro-status {
-  display: flex;
-  max-width: 1120px;
-  align-items: center;
-  justify-content: space-between;
-  gap: 24px;
-  margin-top: 58px;
-  border-top: 1px solid #1c1b1b;
-  padding-top: 22px;
+.hero-actions {
+  display: grid;
+  max-width: 1320px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-top: 44px;
+  border: 1px solid #1c1b1b;
 }
-.intro-status span {
+.hero-action {
+  display: grid;
+  min-height: 108px;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 16px;
+  align-items: center;
+  border-right: 1px solid #1c1b1b;
+  background: #faf7f0;
+  padding: 22px;
+}
+.hero-action:last-child {
+  border-right: 0;
+}
+.hero-action:hover,
+.hero-action:focus-visible {
+  background: #f0e8db;
+}
+.hero-action-primary {
+  background: #1f3a32;
+  color: #fff;
+}
+.hero-action-primary:hover,
+.hero-action-primary:focus-visible {
+  background: #152c26;
+}
+.hero-action > svg:first-child {
+  width: 27px;
+  height: 27px;
+  color: #a64a2d;
+}
+.hero-action-primary > svg:first-child {
+  color: #dfc665;
+}
+.hero-action > svg:last-child {
+  width: 18px;
+}
+.hero-action span {
+  display: grid;
+  gap: 6px;
+}
+.hero-action small,
+.platform-note {
   font-family: monospace;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 900;
   letter-spacing: 0.09em;
 }
-.intro-status a {
-  display: inline-flex;
-  align-items: center;
-  gap: 9px;
-  color: #a64a2d;
-  font-weight: 900;
+.hero-action strong {
+  font-size: clamp(17px, 1.5vw, 21px);
+  line-height: 1.2;
 }
-.intro-status svg {
-  width: 18px;
+.platform-note {
+  margin: 16px 0 0;
+  color: #6b5a52;
 }
 .bios-frame {
   display: grid;
@@ -506,14 +542,22 @@ a {
   .resource-intro h1 {
     font-size: 59px;
   }
-  .intro-status,
   .bios-actions,
   .quick-footer {
     align-items: flex-start;
     flex-direction: column;
   }
-  .intro-status {
-    display: grid;
+  .hero-actions {
+    grid-template-columns: 1fr;
+    margin-top: 36px;
+  }
+  .hero-action {
+    min-height: 92px;
+    border-right: 0;
+    border-bottom: 1px solid #1c1b1b;
+  }
+  .hero-action:last-child {
+    border-bottom: 0;
   }
   .bios-frame {
     grid-template-columns: 1fr;

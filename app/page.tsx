@@ -1,4 +1,4 @@
-import { ArrowRight, ExternalLink } from 'lucide-react';
+import { ArrowRight, BookOpen, ExternalLink, HandHeart, TicketCheck } from 'lucide-react';
 import Link from 'next/link';
 
 import { SiteFooter, SiteHeader } from './site-chrome';
@@ -16,10 +16,33 @@ export default function Home() {
           what was expected of them. This is the beginning of a community built
           around that belief.
         </p>
-        <div className="intro-status">
-          <span>THE FULL NYA PLATFORM IS COMING SOON</span>
-          <Link href="/resources">UCS503 resources are available now <ArrowRight aria-hidden="true" /></Link>
+        <div className="hero-actions" aria-label="Start here">
+          <Link href="/resources" className="hero-action hero-action-primary">
+            <BookOpen aria-hidden="true" />
+            <span>
+              <small>EXAM RESOURCES</small>
+              <strong>Study UCS503</strong>
+            </span>
+            <ArrowRight aria-hidden="true" />
+          </Link>
+          <a className="hero-action" href="https://csatnypudj.zite.so" target="_blank" rel="noreferrer">
+            <HandHeart aria-hidden="true" />
+            <span>
+              <small>JOIN THE TEAM</small>
+              <strong>Volunteer for BIOS</strong>
+            </span>
+            <ExternalLink aria-hidden="true" />
+          </a>
+          <a className="hero-action" href="https://bios.notyouraverage.xyz/tracks" target="_blank" rel="noreferrer">
+            <TicketCheck aria-hidden="true" />
+            <span>
+              <small>HACKATHON</small>
+              <strong>Register for BIOS</strong>
+            </span>
+            <ExternalLink aria-hidden="true" />
+          </a>
         </div>
+        <p className="platform-note">THE FULL NYA PLATFORM IS COMING SOON</p>
       </section>
 
       <section className="bios-frame" aria-labelledby="bios-title">
