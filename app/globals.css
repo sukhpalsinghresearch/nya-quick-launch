@@ -1658,6 +1658,29 @@ a {
 .revision-questions article footer p strong {
   color: #1c1b1b;
 }
+.revision-feedback {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+.revision-feedback a {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 8px;
+  color: #7f321d;
+  font-weight: 900;
+  text-decoration: none;
+}
+.revision-feedback a:hover {
+  text-decoration: underline;
+}
+.revision-feedback a svg {
+  width: 17px;
+  height: 17px;
+}
 .revision-questions article footer button {
   min-height: 42px;
   border: 1px solid #1c1b1b;
@@ -1672,6 +1695,10 @@ a {
 }
 
 @media (max-width: 850px) {
+  .revision-feedback {
+    align-items: flex-start;
+    flex-direction: column;
+  }
   .module-map header,
   .lesson-knowledge-grid,
   .revision-guide,
