@@ -708,6 +708,53 @@ a {
   margin-top: 18px;
 }
 
+.model-selector {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  border: 1px solid var(--ink);
+  margin-bottom: 0;
+}
+
+.model-selector button {
+  min-height: 118px;
+  padding: 20px;
+  border: 0;
+  border-right: 1px solid var(--ink);
+  border-bottom: 1px solid var(--ink);
+  background: var(--paper);
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.model-selector button:nth-child(3n) { border-right: 0; }
+.model-selector button:nth-last-child(-n + 3) { border-bottom: 0; }
+.model-selector button strong { font-size: 1.14rem; }
+.model-selector button small { font-size: .83rem; line-height: 1.4; color: var(--muted); }
+.model-selector button:hover,
+.model-selector button:focus-visible { background: var(--cream); }
+.model-selector button.active { background: var(--gold); }
+.model-selector button.active small { color: var(--ink); }
+
+.model-selection-status {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 12px 16px;
+  border: 1px solid var(--ink);
+  border-top: 0;
+  margin-bottom: 18px;
+}
+
+.model-selection-status span { font-family: var(--font-mono); color: var(--rust); font-size: .76rem; }
+.model-selection-status button { border: 0; background: none; font-weight: 800; text-decoration: underline; cursor: pointer; }
+.model-selection-status button:disabled { opacity: .38; cursor: default; }
+.lab-result > strong { display: block; margin-top: 14px; }
+
 .process-path > div {
   min-height: 112px;
   padding: 18px;
@@ -766,6 +813,11 @@ a {
 
 @media (max-width: 900px) {
   .process-path { grid-template-columns: 1fr; }
+  .model-selector { grid-template-columns: 1fr; }
+  .model-selector button,
+  .model-selector button:nth-child(3n),
+  .model-selector button:nth-last-child(-n + 3) { border-right: 0; border-bottom: 1px solid var(--ink); }
+  .model-selector button:last-child { border-bottom: 0; }
   .process-path > div { min-height: auto; border-right: 0; border-bottom: 1px solid var(--ink); }
   .process-path > div:last-child { border-bottom: 0; }
   .process-path svg { right: 16px; top: auto; bottom: -12px; transform: rotate(90deg); }

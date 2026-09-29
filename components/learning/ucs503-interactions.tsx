@@ -60,36 +60,80 @@ function FoundationsLab() {
 }
 
 function ProcessModelLab() {
+  type ModelName = 'Waterfall' | 'Incremental' | 'Iterative' | 'Prototyping' | 'Spiral' | 'V-model';
   const [stability, setStability] = useState('changing');
   const [risk, setRisk] = useState('medium');
   const [feedback, setFeedback] = useState('frequent');
   const [assurance, setAssurance] = useState('normal');
-  const result = useMemo(() => {
+  const [selectedModel, setSelectedModel] = useState<ModelName | null>(null);
+  const models: Record<ModelName, { bestFor: string; reason: string; warning: string; path: string[] }> = {
+    Waterfall: {
+      bestFor: 'Stable scope and controlled phase handoffs',
+      reason: 'Use it when the requirements are understood early and expensive late change is unlikely.',
+      warning: 'Weak fit when users need to discover the product through frequent feedback.',
+      path: ['Requirements', 'System design', 'Implementation', 'Testing', 'Deployment'],
+    },
+    Incremental: {
+      bestFor: 'A useful product delivered in planned slices',
+      reason: 'Each increment adds usable capability while preserving an overall product direction.',
+      warning: 'The architecture still needs planning so separate increments fit together.',
+      path: ['Plan the product', 'Choose an increment', 'Build and verify', 'Integrate', 'Deliver the next increment'],
+    },
+    Iterative: {
+      bestFor: 'Repeated improvement of the same solution',
+      reason: 'Build a version, inspect it, learn and refine the design through repeated cycles.',
+      warning: 'Iteration without an evaluation goal can become repeated rework.',
+      path: ['Plan a version', 'Design', 'Build and test', 'Evaluate', 'Refine the next version'],
+    },
+    Prototyping: {
+      bestFor: 'Unclear requirements or risky user interaction',
+      reason: 'Create a quick model to expose what users actually need before committing to the final system.',
+      warning: 'State whether the prototype will be discarded or evolved. Do not silently treat a rough prototype as production software.',
+      path: ['Identify uncertainty', 'Build prototype', 'Collect feedback', 'Refine requirements', 'Engineer the real solution'],
+    },
+    Spiral: {
+      bestFor: 'Large, costly or high-risk work',
+      reason: 'Every loop identifies objectives, analyzes major risks and validates the next commitment.',
+      warning: 'Its risk analysis overhead is difficult to justify for a small, low-risk project.',
+      path: ['Set objectives', 'Analyze risks', 'Engineer a solution', 'Review with stakeholders', 'Plan the next loop'],
+    },
+    'V-model': {
+      bestFor: 'Stable requirements with strict verification',
+      reason: 'Each specification level is paired with a corresponding test level planned early.',
+      warning: 'It is less flexible when requirements change frequently after test plans are fixed.',
+      path: ['Specify requirements', 'Design the system', 'Implement', 'Run matched test levels', 'Validate acceptance'],
+    },
+  };
+  const recommendation = useMemo<{ model: ModelName; reason: string }>(() => {
     if (risk === 'high') return { model: 'Spiral', reason: 'The project has material risk, so each cycle should identify and reduce risk before committing further.' };
     if (assurance === 'high' && stability === 'stable') return { model: 'V-model', reason: 'Stable, safety or compliance-heavy work benefits from planned verification alongside each specification level.' };
     if (stability === 'stable' && feedback === 'limited') return { model: 'Waterfall', reason: 'The requirements are stable and external feedback is limited, so planned phase handoffs are defensible.' };
-    if (stability === 'changing' && feedback === 'frequent') return { model: 'Agile / Iterative', reason: 'Frequent feedback and changing requirements favor short increments that can be reviewed and changed.' };
-    return { model: 'Incremental / Prototyping', reason: 'Deliver a thin, useful slice early, learn from it, then expand the system without pretending uncertainty is gone.' };
+    if (stability === 'stable' && feedback === 'frequent') return { model: 'Incremental', reason: 'The direction is stable, but frequent feedback lets the team deliver and validate useful capability in planned increments.' };
+    if (stability === 'changing' && feedback === 'limited') return { model: 'Prototyping', reason: 'The requirements are unclear, so a focused prototype should expose assumptions before the team commits to a full build.' };
+    return { model: 'Iterative', reason: 'Frequent feedback and changing requirements favor repeated versions that can be evaluated and improved.' };
   }, [assurance, feedback, risk, stability]);
-  const paths: Record<string, string[]> = {
-    'Waterfall': ['Requirements', 'System design', 'Implementation', 'Testing', 'Deployment'],
-    'V-model': ['Specify', 'Plan matching tests', 'Implement', 'Run unit to acceptance tests', 'Release'],
-    'Spiral': ['Set objectives', 'Analyze risks', 'Engineer a solution', 'Review with stakeholders', 'Plan the next loop'],
-    'Agile / Iterative': ['Order backlog', 'Plan a short cycle', 'Build and test', 'Review the increment', 'Adapt'],
-    'Incremental / Prototyping': ['Choose a thin slice', 'Prototype or design it', 'Build and validate', 'Integrate', 'Choose the next slice'],
-  };
+  const activeModel = selectedModel ?? recommendation.model;
+  const active = models[activeModel];
+  const updateCondition = (update: () => void) => { setSelectedModel(null); update(); };
 
   return <>
-    <LabHeader eyebrow="PROCESS MODEL DECISION" title="Choose the model from the project, not the definition." copy="Change the project conditions. The recommendation should change because the trade-off changes." />
-    <div className="lab-grid model-controls">
-      <label>Requirement stability<select value={stability} onChange={(event) => setStability(event.target.value)}><option value="stable">Mostly stable</option><option value="changing">Likely to change</option></select></label>
-      <label>Project risk<select value={risk} onChange={(event) => setRisk(event.target.value)}><option value="low">Low</option><option value="medium">Medium</option><option value="high">High or unknown</option></select></label>
-      <label>Feedback access<select value={feedback} onChange={(event) => setFeedback(event.target.value)}><option value="limited">Limited</option><option value="frequent">Frequent</option></select></label>
-      <label>Assurance need<select value={assurance} onChange={(event) => setAssurance(event.target.value)}><option value="normal">Normal</option><option value="high">Safety, regulation or strict verification</option></select></label>
+    <div id="process-model-selector">
+      <LabHeader eyebrow="PROCESS MODEL EXPLORER" title="Choose a model, or let the project recommend one." copy="Select a model to study it directly. Change the project conditions below when you want to compare which model fits the evidence." />
     </div>
-    <div className="lab-result"><span>BEST FIT</span><h3>{result.model}</h3><p>{result.reason}</p></div>
-    <div className="process-path" aria-label={`${result.model} working flow`}>{paths[result.model].map((step, index) => <div key={step}><small>{String(index + 1).padStart(2, '0')}</small><strong>{step}</strong>{index < paths[result.model].length - 1 && <ArrowRight aria-hidden="true" />}</div>)}</div>
-    <p className="lab-rule"><CircleAlert aria-hidden="true" /> This is a reasoned starting point, not an automatic answer. Defend it with the four conditions above.</p>
+    <fieldset className="model-selector">
+      <legend className="sr-only">Choose a software process model</legend>
+      {(Object.keys(models) as ModelName[]).map((model) => <button type="button" className={activeModel === model ? 'active' : ''} aria-pressed={activeModel === model} key={model} onClick={() => setSelectedModel(model)}><strong>{model}</strong><small>{models[model].bestFor}</small></button>)}
+    </fieldset>
+    <div className="model-selection-status"><span>{selectedModel ? 'SELECTED MODEL' : 'RECOMMENDED FROM CONDITIONS'}</span><button type="button" disabled={!selectedModel} onClick={() => setSelectedModel(null)}>Use project recommendation</button></div>
+    <div className="lab-grid model-controls">
+      <label>Requirement stability<select value={stability} onChange={(event) => updateCondition(() => setStability(event.target.value))}><option value="stable">Mostly stable</option><option value="changing">Likely to change</option></select></label>
+      <label>Project risk<select value={risk} onChange={(event) => updateCondition(() => setRisk(event.target.value))}><option value="low">Low</option><option value="medium">Medium</option><option value="high">High or unknown</option></select></label>
+      <label>Feedback access<select value={feedback} onChange={(event) => updateCondition(() => setFeedback(event.target.value))}><option value="limited">Limited</option><option value="frequent">Frequent</option></select></label>
+      <label>Assurance need<select value={assurance} onChange={(event) => updateCondition(() => setAssurance(event.target.value))}><option value="normal">Normal</option><option value="high">Safety, regulation or strict verification</option></select></label>
+    </div>
+    <div className="lab-result"><span>{selectedModel ? 'MODEL EXPLANATION' : 'BEST FIT'}</span><h3>{activeModel}</h3><p>{selectedModel ? active.reason : recommendation.reason}</p><strong>Watch out: {active.warning}</strong></div>
+    <div className="process-path" aria-label={`${activeModel} working flow`}>{active.path.map((step, index) => <div key={step}><small>{String(index + 1).padStart(2, '0')}</small><strong>{step}</strong>{index < active.path.length - 1 && <ArrowRight aria-hidden="true" />}</div>)}</div>
+    <p className="lab-rule"><CircleAlert aria-hidden="true" /> {selectedModel ? 'You are studying a selected model. Choose “Use project recommendation” to let the conditions decide again.' : 'This is a reasoned starting point, not an automatic answer. Defend it with the four conditions above.'}</p>
   </>;
 }
 
