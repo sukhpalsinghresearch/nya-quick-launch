@@ -3,6 +3,7 @@
 import { ExternalLink, Menu } from 'lucide-react';
 import Link from 'next/link';
 import { useState } from 'react';
+import { ViewCounter } from '@/components/analytics/view-counter';
 
 export function SiteHeader({ active = 'home' }: { active?: 'home' | 'resources' | 'courses' }) {
   const [open, setOpen] = useState(false);
@@ -30,6 +31,7 @@ export function SiteFooter() {
     <footer className="quick-footer">
       <div className="quick-brand"><strong>NOT / AVERAGE</strong><span>WE CAN DO BETTER</span></div>
       <p>Built for the people who believe average is not the limit.</p>
+      <ViewCounter />
       <div><Link href="/resources">UCS503 resources</Link><a href="https://bios.notyouraverage.xyz">BIOS</a></div>
     </footer>
   );

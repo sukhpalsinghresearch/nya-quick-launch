@@ -371,7 +371,7 @@ a {
 }
 .quick-footer {
   display: grid;
-  grid-template-columns: 1fr 1fr auto;
+  grid-template-columns: 1fr minmax(220px, 1fr) auto auto;
   gap: 30px;
   align-items: center;
   border-top: 1px solid #1c1b1b;
@@ -385,6 +385,27 @@ a {
   display: flex;
   gap: 22px;
   font-weight: 850;
+}
+.view-counter {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  color: #1f3a32;
+  font-family: monospace;
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+.view-counter span {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  white-space: nowrap;
+}
+.view-counter svg {
+  width: 16px;
+  height: 16px;
+  color: #9d3f24;
 }
 
 @media (max-width: 760px) {

@@ -1,0 +1,22 @@
+[Unit]
+Description=NYA anonymous analytics
+After=network.target
+
+[Service]
+Type=simple
+User=nya
+Group=nya
+WorkingDirectory=/opt/nya-quick-launch
+EnvironmentFile=/opt/nya-quick-launch/.env.analytics
+Environment=NODE_ENV=production
+ExecStart=/usr/bin/node analytics/server.mjs
+Restart=always
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/nya-quick-launch/data
+
+[Install]
+WantedBy=multi-user.target
