@@ -146,14 +146,22 @@ a {
   width: 18px;
 }
 .nya-intro {
-  min-height: 610px;
   border-bottom: 1px solid #1c1b1b;
-  padding: clamp(64px, 8vw, 118px) 6vw 72px;
+  padding: clamp(38px, 4.5vw, 68px) 6vw clamp(38px, 4vw, 58px);
 }
 .nya-intro h1,
 .resource-intro h1 {
-  max-width: 1120px;
-  margin: 28px 0;
+  max-width: 1260px;
+  margin: 16px 0 18px;
+}
+.nya-intro h1 {
+  font-family: var(--font-hanken), Arial, sans-serif;
+  font-size: clamp(58px, 8vw, 126px);
+  font-weight: 950;
+  letter-spacing: -0.075em;
+  line-height: 0.84;
+}
+.resource-intro h1 {
   font-family: var(--font-playfair), Georgia, serif;
   font-size: clamp(62px, 9.2vw, 146px);
   font-weight: 900;
@@ -176,12 +184,12 @@ a {
   display: grid;
   max-width: 1320px;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  margin-top: 44px;
+  margin-top: 30px;
   border: 1px solid #1c1b1b;
 }
 .hero-action {
   display: grid;
-  min-height: 108px;
+  min-height: 96px;
   grid-template-columns: auto minmax(0, 1fr) auto;
   gap: 16px;
   align-items: center;
@@ -234,49 +242,43 @@ a {
   margin: 16px 0 0;
   color: #6b5a52;
 }
-.bios-frame {
+.bios-feature {
   display: grid;
-  grid-template-columns: minmax(140px, 0.28fr) minmax(0, 1fr) minmax(140px, 0.28fr);
-  min-height: 620px;
+  grid-template-columns: minmax(300px, 0.72fr) minmax(0, 1.28fr);
   border-bottom: 1px solid #1c1b1b;
   background: #081b18;
   color: #f6f1df;
 }
-.bios-bio,
-.bios-os {
+.bios-feature-mark {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   border-right: 1px solid rgb(246 241 223 / 40%);
-  padding: 34px 26px;
+  background: #f07a46;
+  color: #081b18;
+  padding: clamp(34px, 5vw, 72px);
 }
-.bios-os {
-  border-right: 0;
-  border-left: 1px solid rgb(246 241 223 / 40%);
-  background: #11130f;
-  text-align: right;
+.bios-feature-mark span {
+  font-family: var(--font-hanken), Arial, sans-serif;
+  font-size: clamp(82px, 12vw, 190px);
+  font-weight: 950;
+  letter-spacing: -0.1em;
+  line-height: 0.75;
 }
-.bios-bio span,
-.bios-os span {
-  color: #f07a46;
-  font-family: var(--font-playfair), Georgia, serif;
-  font-size: clamp(68px, 8vw, 126px);
-  font-weight: 900;
-  line-height: 0.8;
-}
-.bios-bio p,
-.bios-os p {
+.bios-feature-mark p {
+  max-width: 250px;
+  margin: clamp(100px, 16vw, 220px) 0 0;
   font-family: monospace;
   font-size: 12px;
   font-weight: 900;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.11em;
   line-height: 1.55;
 }
-.bios-main {
+.bios-feature-copy {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  padding: 72px 5vw;
+  padding: clamp(58px, 7vw, 104px) 6vw;
 }
 .bios-label {
   color: #f07a46;
@@ -285,17 +287,37 @@ a {
   font-weight: 900;
   letter-spacing: 0.1em;
 }
-.bios-main h2 {
-  margin: 26px 0 20px;
-  font-family: var(--font-playfair), Georgia, serif;
-  font-size: clamp(54px, 7vw, 112px);
-  font-weight: 900;
-  letter-spacing: -0.05em;
-  line-height: 0.87;
+.bios-feature-copy h2 {
+  max-width: 900px;
+  margin: 24px 0 22px;
+  font-family: var(--font-hanken), Arial, sans-serif;
+  font-size: clamp(48px, 6vw, 94px);
+  font-weight: 950;
+  letter-spacing: -0.07em;
+  line-height: 0.9;
 }
-.bios-main > p:not(.bios-label) {
+.bios-feature-copy > p:not(.bios-label) {
+  max-width: 780px;
+  margin: 0;
   color: #c9d7d1;
-  font-size: 22px;
+  font-size: clamp(19px, 1.7vw, 24px);
+  line-height: 1.5;
+}
+.bios-facts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1px;
+  margin-top: 36px;
+  background: rgb(246 241 223 / 35%);
+  border: 1px solid rgb(246 241 223 / 35%);
+}
+.bios-facts span {
+  background: #081b18;
+  padding: 17px 18px;
+  color: #f6f1df;
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 1.4;
 }
 .bios-actions {
   display: flex;
@@ -559,21 +581,22 @@ a {
   .hero-action:last-child {
     border-bottom: 0;
   }
-  .bios-frame {
+  .bios-feature {
     grid-template-columns: 1fr;
   }
-  .bios-bio,
-  .bios-os {
-    min-height: 160px;
-    border: 0;
-    border-bottom: 1px solid rgb(246 241 223 / 40%);
+  .bios-feature-mark {
+    border-right: 0;
+    border-bottom: 1px solid #081b18;
+    padding: 38px 20px;
   }
-  .bios-os {
-    border-top: 1px solid rgb(246 241 223 / 40%);
-    border-bottom: 0;
+  .bios-feature-mark p {
+    margin-top: 56px;
   }
-  .bios-main {
+  .bios-feature-copy {
     padding: 58px 20px;
+  }
+  .bios-facts {
+    grid-template-columns: 1fr;
   }
   .volunteer-callout {
     grid-template-columns: 1fr;

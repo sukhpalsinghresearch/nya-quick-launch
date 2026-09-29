@@ -45,25 +45,29 @@ export default function Home() {
         <p className="platform-note">THE FULL NYA PLATFORM IS COMING SOON</p>
       </section>
 
-      <section className="bios-frame" aria-labelledby="bios-title">
-        <div className="bios-bio">
-          <span>BIO</span>
-          <p>humanity · nature · life</p>
+      <section className="bios-feature" aria-labelledby="bios-title">
+        <div className="bios-feature-mark" aria-hidden="true">
+          <span>BIOS</span>
+          <p>BRINGING INNOVATION ON-STAGE</p>
         </div>
-        <div className="bios-main">
+        <div className="bios-feature-copy">
           <p className="bios-label">BIOS V2 · THAPAR INSTITUTE, PATIALA</p>
-          <h2 id="bios-title">Bringing Innovation<br />On-Stage</h2>
-          <p>A hackathon where life and computation meet.</p>
+          <h2 id="bios-title">We are organising BIOS again this year.</h2>
+          <p>
+            BIOS brings students together to choose a real problem, build a
+            serious solution and put it on stage. Join a track, form your team
+            and take the idea beyond a saved document.
+          </p>
+          <div className="bios-facts" aria-label="About BIOS">
+            <span>Open to builders across disciplines</span>
+            <span>Teams, tracks and guided problem statements</span>
+          </div>
           <div className="bios-actions">
             <a className="bios-register" href="https://bios.notyouraverage.xyz/tracks" target="_blank" rel="noreferrer">
               Register for BIOS <ExternalLink aria-hidden="true" />
             </a>
-            <a href="https://bios.notyouraverage.xyz" target="_blank" rel="noreferrer">Visit the BIOS website</a>
+            <a href="https://bios.notyouraverage.xyz" target="_blank" rel="noreferrer">Explore BIOS</a>
           </div>
-        </div>
-        <div className="bios-os">
-          <span>OS</span>
-          <p>computation · systems · machines</p>
         </div>
       </section>
 
