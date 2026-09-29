@@ -10,6 +10,7 @@
     "dev:analytics": "node analytics/server.mjs",
     "build": "vinext build",
     "start": "wrangler dev --config dist/server/wrangler.json",
+    "export:analytics": "python3 scripts/export_analytics.py",
     "lint": "oxlint",
     "format": "oxfmt"
   },

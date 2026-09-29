@@ -1,9 +1,9 @@
-import { createHmac, timingSafeEqual } from 'node:crypto';
+import { createHmac, timingSafeEqual, randomUUID } from 'node:crypto';
 import { DatabaseSync } from 'node:sqlite';
 import { mkdirSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { createServer } from 'node:http';
-import { SessionStore } from './session-store.mjs';
+import { HighConcurrencyStore } from './high-concurrency-store.mjs';
 
 const port = Number(process.env.ANALYTICS_PORT || 8788);
 const host = process.env.ANALYTICS_HOST || '127.0.0.1';
@@ -24,9 +24,11 @@ if (production && (hashSecret.length < 32 || statsKey.length < 32 || hashSecret 
   throw new Error('Production analytics requires two different secrets of at least 32 characters.');
 }
 
-const sessionStore = new SessionStore();
+// High concurrency append-only storage for anonymous visitor sessions
+const store = new HighConcurrencyStore();
 
-mkdirSync(dirname(databasePath), { recursive: true });
+// SQLite for footer view counter
+mkdirSync(dirname(databasePath), { recursive: true, mode: 0o700 });
 const db = new DatabaseSync(databasePath);
 db.exec(`
   PRAGMA journal_mode = WAL;
@@ -64,14 +66,60 @@ const insertView = db.prepare('INSERT INTO page_views (visitor_hash, path, viewe
 const recentView = db.prepare('SELECT 1 FROM page_views WHERE visitor_hash = ? AND path = ? AND viewed_at >= ? LIMIT 1');
 const deleteExpired = db.prepare('DELETE FROM online_sessions WHERE last_seen < ?');
 
-function json(response, status, body, origin) {
+const COOKIE_NAME = 'nya_sid';
+const PATH_REGEX = /^\/[a-zA-Z0-9_\-.~%#]*$/;
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+function signSessionId(id) {
+  const hmac = createHmac('sha256', hashSecret).update(id).digest('hex').slice(0, 32);
+  return `${id}.${hmac}`;
+}
+
+function verifyAndExtractSessionId(rawCookie) {
+  if (!rawCookie || typeof rawCookie !== 'string') return null;
+  const parts = rawCookie.split('.');
+  if (parts.length !== 2) return null;
+  const [id, signature] = parts;
+  if (!UUID_REGEX.test(id) || !/^[0-9a-f]{32}$/i.test(signature)) return null;
+
+  const expected = createHmac('sha256', hashSecret).update(id).digest('hex').slice(0, 32);
+  const sigBuf = Buffer.from(signature, 'utf8');
+  const expBuf = Buffer.from(expected, 'utf8');
+  if (sigBuf.length !== expBuf.length || !timingSafeEqual(sigBuf, expBuf)) {
+    return null;
+  }
+  return id;
+}
+
+function parseCookies(header = '') {
+  const cookies = {};
+  if (!header) return cookies;
+  const pairs = header.split(';');
+  for (const pair of pairs) {
+    const idx = pair.indexOf('=');
+    if (idx === -1) continue;
+    const key = pair.slice(0, idx).trim();
+    const val = pair.slice(idx + 1).trim();
+    try {
+      cookies[key] = decodeURIComponent(val);
+    } catch {
+      cookies[key] = val;
+    }
+  }
+  return cookies;
+}
+
+function json(response, status, body, origin, extraHeaders = {}) {
   const headers = {
     'Content-Type': 'application/json; charset=utf-8',
-    'Cache-Control': 'no-store',
+    'Cache-Control': 'no-store, no-cache, must-revalidate',
     'X-Content-Type-Options': 'nosniff',
+    'X-Frame-Options': 'DENY',
+    ...extraHeaders,
   };
   if (origin && allowedOrigins.has(origin)) {
     headers['Access-Control-Allow-Origin'] = origin;
+    headers['Access-Control-Allow-Credentials'] = 'true';
     headers.Vary = 'Origin';
   }
   response.writeHead(status, headers);
@@ -79,11 +127,9 @@ function json(response, status, body, origin) {
 }
 
 function normalizePath(value) {
-  if (typeof value !== 'string' || !value.startsWith('/')) return null;
-  const clean = Array.from(value.split('#')[0])
-    .filter((character) => character.charCodeAt(0) > 31)
-    .join('')
-    .slice(0, 240);
+  if (typeof value !== 'string' || !value.startsWith('/') || value.length > 256) return null;
+  const clean = value.split('#')[0].split('?')[0];
+  if (!PATH_REGEX.test(clean)) return null;
   return clean || '/';
 }
 
@@ -93,7 +139,7 @@ function visitorHash(value) {
 }
 
 function isBot(userAgent = '') {
-  return /bot|crawler|spider|headless|preview|facebookexternalhit|whatsapp/i.test(userAgent);
+  return /bot|crawler|spider|headless|preview|facebookexternalhit|whatsapp|slurp/i.test(userAgent);
 }
 
 function publicStats(now = Date.now()) {
@@ -104,22 +150,42 @@ function publicStats(now = Date.now()) {
   };
 }
 
-function keysMatch(provided) {
-  if (!provided) return false;
-  const supplied = Buffer.from(provided);
-  const expected = Buffer.from(statsKey);
-  return supplied.length === expected.length && timingSafeEqual(supplied, expected);
-}
-
-async function readBody(request) {
+async function readBody(request, maxBytes = 1024) {
   const chunks = [];
   let size = 0;
   for await (const chunk of request) {
     size += chunk.length;
-    if (size > 16_384) throw new Error('Request body is too large.');
+    if (size > maxBytes) {
+      throw new Error('Payload too large');
+    }
     chunks.push(chunk);
   }
-  return JSON.parse(Buffer.concat(chunks).toString('utf8') || '{}');
+  const text = Buffer.concat(chunks).toString('utf8').trim();
+  if (!text) return {};
+  try {
+    return JSON.parse(text);
+  } catch {
+    throw new Error('Malformed JSON');
+  }
+}
+
+function validatePayload(body) {
+  if (!body || typeof body !== 'object' || Array.isArray(body)) {
+    return false;
+  }
+  const keys = Object.keys(body);
+  for (const k of keys) {
+    if (k !== 'path') return false; // reject unexpected fields
+  }
+  if (body.path !== undefined) {
+    if (typeof body.path !== 'string' || body.path.length > 256 || !body.path.startsWith('/')) {
+      return false;
+    }
+    if (!PATH_REGEX.test(body.path.split('#')[0].split('?')[0])) {
+      return false;
+    }
+  }
+  return true;
 }
 
 const server = createServer(async (request, response) => {
@@ -130,12 +196,16 @@ const server = createServer(async (request, response) => {
   // Normalize route removing optional prefix /api/analytics or /analytics
   const route = rawPath.replace(/^\/api\/analytics/, '').replace(/^\/analytics/, '') || '/';
 
+  // Handle CORS preflight
   if (request.method === 'OPTIONS') {
-    if (origin && !allowedOrigins.has(origin)) return json(response, 403, { error: 'Origin not allowed.' });
+    if (origin && !allowedOrigins.has(origin)) {
+      return json(response, 403, { error: 'Forbidden' });
+    }
     response.writeHead(204, {
       'Access-Control-Allow-Origin': origin || '*',
-      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type, X-Stats-Key, Authorization',
+      'Access-Control-Allow-Credentials': 'true',
+      'Access-Control-Allow-Methods': 'POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type',
       'Access-Control-Max-Age': '86400',
       Vary: 'Origin',
     });
@@ -147,106 +217,86 @@ const server = createServer(async (request, response) => {
     return json(response, 200, { ok: true }, origin);
   }
 
-  // Realtime API endpoint
-  if (route === '/realtime' && request.method === 'GET') {
-    return json(response, 200, sessionStore.getRealtime(), origin);
-  }
+  // Determine if HTTPS protocol is used
+  const isSecure = (request.headers['x-forwarded-proto'] === 'https') || (request.socket && request.socket.encrypted);
 
-  // CSV Export endpoint
-  if (route === '/export.csv' && request.method === 'GET') {
-    const csv = sessionStore.exportCsv();
-    const headers = {
-      'Content-Type': 'text/csv; charset=utf-8',
-      'Content-Disposition': 'attachment; filename="visitor_sessions.csv"',
-      'Cache-Control': 'no-store',
-    };
-    if (origin && allowedOrigins.has(origin)) {
-      headers['Access-Control-Allow-Origin'] = origin;
-      headers.Vary = 'Origin';
-    }
-    response.writeHead(200, headers);
-    response.end(csv);
-    return;
-  }
-
-  // JSON Export endpoint
-  if (route === '/export.json' && request.method === 'GET') {
-    const data = sessionStore.getAllSessions();
-    const headers = {
-      'Content-Type': 'application/json; charset=utf-8',
-      'Content-Disposition': 'attachment; filename="visitor_sessions.json"',
-      'Cache-Control': 'no-store',
-    };
-    if (origin && allowedOrigins.has(origin)) {
-      headers['Access-Control-Allow-Origin'] = origin;
-      headers.Vary = 'Origin';
-    }
-    response.writeHead(200, headers);
-    response.end(JSON.stringify(data, null, 2));
-    return;
-  }
-
-  // Anonymous Session Tracking: start
+  // POST /analytics/session/start
   if (route === '/session/start' && request.method === 'POST') {
-    if (origin && !allowedOrigins.has(origin)) return json(response, 403, { error: 'Origin not allowed.' }, origin);
-    if (isBot(request.headers['user-agent'])) return json(response, 200, { ok: true, bot: true }, origin);
+    if (origin && !allowedOrigins.has(origin)) return json(response, 403, { error: 'Forbidden' }, origin);
+    if (isBot(request.headers['user-agent'])) return json(response, 200, { ok: true }, origin);
+
+    let body;
     try {
-      const body = await readBody(request);
-      const session = await sessionStore.startSession({
-        sessionId: body.session_id,
-        path: body.path,
-      });
-      return json(response, 200, { ok: true, session }, origin);
-    } catch (error) {
-      return json(response, 400, { error: error.message || 'Invalid session payload.' }, origin);
+      body = await readBody(request, 1024);
+      if (!validatePayload(body)) {
+        return json(response, 400, { error: 'Bad Request' }, origin);
+      }
+    } catch {
+      return json(response, 400, { error: 'Bad Request' }, origin);
+    }
+
+    const path = normalizePath(body.path) || '/';
+    const sessionId = randomUUID();
+    const signedSid = signSessionId(sessionId);
+
+    // Issue secure HttpOnly cookie
+    const cookieHeader = `${COOKIE_NAME}=${encodeURIComponent(signedSid)}; Path=/; HttpOnly; SameSite=Lax; Max-Age=86400${isSecure ? '; Secure' : ''}`;
+
+    try {
+      await store.recordStart({ sessionId, path });
+      return json(response, 200, { ok: true }, origin, { 'Set-Cookie': cookieHeader });
+    } catch (err) {
+      console.error('Failed to record session start:', err);
+      return json(response, 500, { error: 'Internal Error' }, origin);
     }
   }
 
-  // Anonymous Session Tracking: heartbeat
+  // POST /analytics/session/heartbeat
   if (route === '/session/heartbeat' && request.method === 'POST') {
-    if (origin && !allowedOrigins.has(origin)) return json(response, 403, { error: 'Origin not allowed.' }, origin);
-    if (isBot(request.headers['user-agent'])) return json(response, 200, { ok: true, bot: true }, origin);
+    if (origin && !allowedOrigins.has(origin)) return json(response, 403, { error: 'Forbidden' }, origin);
+    if (isBot(request.headers['user-agent'])) return json(response, 200, { ok: true }, origin);
+
+    let body;
     try {
-      const body = await readBody(request);
-      const session = await sessionStore.heartbeatSession({
-        sessionId: body.session_id,
-        path: body.path,
-      });
-      return json(response, 200, { ok: true, session }, origin);
-    } catch (error) {
-      return json(response, 400, { error: error.message || 'Invalid heartbeat payload.' }, origin);
+      body = await readBody(request, 1024);
+      if (!validatePayload(body)) {
+        return json(response, 400, { error: 'Bad Request' }, origin);
+      }
+    } catch {
+      return json(response, 400, { error: 'Bad Request' }, origin);
+    }
+
+    const cookies = parseCookies(request.headers.cookie);
+    const sessionId = verifyAndExtractSessionId(cookies[COOKIE_NAME]);
+    if (!sessionId) {
+      return json(response, 400, { error: 'Invalid session' }, origin);
+    }
+
+    const path = normalizePath(body.path) || '/';
+
+    try {
+      await store.recordHeartbeat({ sessionId, path });
+      return json(response, 200, { ok: true }, origin);
+    } catch (err) {
+      console.error('Failed to record heartbeat:', err);
+      return json(response, 500, { error: 'Internal Error' }, origin);
     }
   }
 
-  // Anonymous Session Tracking: end
-  if (route === '/session/end' && request.method === 'POST') {
-    try {
-      const body = await readBody(request);
-      const session = await sessionStore.endSession({
-        sessionId: body.session_id,
-        path: body.path,
-      });
-      return json(response, 200, { ok: true, session }, origin);
-    } catch (error) {
-      return json(response, 400, { error: error.message || 'Invalid end payload.' }, origin);
-    }
-  }
-
-  // Existing Public stats
+  // Existing View Counter endpoints (for footer display)
   if (route === '/public' && request.method === 'GET') {
     return json(response, 200, publicStats(), origin);
   }
 
-  // Existing Track endpoint (for backward-compatible view counter)
   if (route === '/track' && request.method === 'POST') {
-    if (origin && !allowedOrigins.has(origin)) return json(response, 403, { error: 'Origin not allowed.' }, origin);
+    if (origin && !allowedOrigins.has(origin)) return json(response, 403, { error: 'Forbidden' }, origin);
     if (isBot(request.headers['user-agent'])) return json(response, 200, { ...publicStats(), counted: false }, origin);
     try {
-      const body = await readBody(request);
+      const body = await readBody(request, 2048);
       const path = normalizePath(body.path);
       const hash = visitorHash(body.visitorId);
       const event = body.event === 'heartbeat' ? 'heartbeat' : 'view';
-      if (!path || !hash) return json(response, 400, { error: 'Invalid tracking payload.' }, origin);
+      if (!path || !hash) return json(response, 400, { error: 'Bad Request' }, origin);
 
       const now = Date.now();
       db.exec('BEGIN IMMEDIATE');
@@ -264,40 +314,21 @@ const server = createServer(async (request, response) => {
         db.exec('ROLLBACK');
         throw error;
       }
-    } catch (error) {
-      console.error('Analytics tracking failed:', error);
-      return json(response, 400, { error: 'Unable to record this view.' }, origin);
+    } catch {
+      return json(response, 400, { error: 'Bad Request' }, origin);
     }
   }
 
-  // Existing Protected stats endpoint
-  if (route === '/stats' && request.method === 'GET') {
-    const headerKey = request.headers['x-stats-key'];
-    const bearer = request.headers.authorization?.startsWith('Bearer ') ? request.headers.authorization.slice(7) : '';
-    if (!keysMatch(String(headerKey || bearer || ''))) {
-      return json(response, 401, { error: 'Unauthorized.' }, origin);
-    }
-    const now = Date.now();
-    const dayAgo = now - 86_400_000;
-    const weekAgo = now - 604_800_000;
-    const totals = publicStats(now);
-    const uniqueVisitors = Number(db.prepare('SELECT COUNT(*) AS count FROM visitors').get().count);
-    const viewsToday = Number(db.prepare('SELECT COUNT(*) AS count FROM page_views WHERE viewed_at >= ?').get(dayAgo).count);
-    const viewsThisWeek = Number(db.prepare('SELECT COUNT(*) AS count FROM page_views WHERE viewed_at >= ?').get(weekAgo).count);
-    const topPages = db.prepare('SELECT path, COUNT(*) AS views FROM page_views GROUP BY path ORDER BY views DESC, path ASC LIMIT 20').all();
-    return json(response, 200, { ...totals, uniqueVisitors, viewsToday, viewsThisWeek, topPages }, origin);
-  }
-
-  return json(response, 404, { error: 'Not found.' }, origin);
+  // Any other route -> 404
+  return json(response, 404, { error: 'Not found' }, origin);
 });
 
 server.listen(port, host, () => {
   if (!production && (hashSecret.includes('local-development') || statsKey.includes('local-stats'))) {
-    console.warn('Analytics is using development secrets. Set ANALYTICS_HASH_SECRET and ANALYTICS_STATS_KEY before deployment.');
+    console.warn('Analytics is using development secrets. Set ANALYTICS_HASH_SECRET before deployment.');
   }
   console.log(`NYA analytics listening at http://${host}:${port}`);
-  console.log(`Sessions file: ${sessionStore.sessionsFile}`);
-  console.log(`SQLite database: ${databasePath}`);
+  console.log(`Storage directory: ${store.analyticsDir}`);
 });
 
 for (const signal of ['SIGINT', 'SIGTERM']) {
