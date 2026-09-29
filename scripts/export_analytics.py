@@ -140,10 +140,10 @@ def main():
     now_utc = datetime.now(timezone.utc)
     export_date_str = args.date or now_utc.strftime("%Y-%m-%d")
 
-    # Ensure exports directory exists with restricted permissions (0700)
+    # Ensure exports directory exists with restricted permissions (0750)
     exports_dir.mkdir(parents=True, exist_ok=True)
     try:
-        os.chmod(exports_dir, 0o700)
+        os.chmod(exports_dir, 0o750)
     except Exception:
         pass
 
@@ -191,10 +191,10 @@ def main():
     with open(json_path, "w", encoding="utf-8") as f:
         json.dump(payload, f, indent=2, ensure_ascii=False)
 
-    # Restrict file permissions to 0600 (owner read/write only)
+    # Restrict file permissions to 0640 (owner read/write, group read, others denied)
     try:
-        os.chmod(csv_path, 0o600)
-        os.chmod(json_path, 0o600)
+        os.chmod(csv_path, 0o640)
+        os.chmod(json_path, 0o640)
     except Exception:
         pass
 
