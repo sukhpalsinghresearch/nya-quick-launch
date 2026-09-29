@@ -3,6 +3,7 @@ import { DatabaseSync } from 'node:sqlite';
 import { mkdirSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { createServer } from 'node:http';
+import { SessionStore } from './session-store.mjs';
 
 const port = Number(process.env.ANALYTICS_PORT || 8788);
 const host = process.env.ANALYTICS_HOST || '127.0.0.1';
@@ -13,7 +14,7 @@ const onlineWindowMs = Number(process.env.ANALYTICS_ONLINE_WINDOW_MS || 90_000);
 const duplicateWindowMs = Number(process.env.ANALYTICS_DUPLICATE_WINDOW_MS || 10_000);
 const production = process.env.NODE_ENV === 'production';
 const allowedOrigins = new Set(
-  (process.env.ANALYTICS_ALLOWED_ORIGINS || 'http://localhost:3000,http://127.0.0.1:3000')
+  (process.env.ANALYTICS_ALLOWED_ORIGINS || 'http://localhost:3000,http://127.0.0.1:3000,https://notyouraverage.xyz,https://www.notyouraverage.xyz,http://129.154.224.127,http://localhost:8788,http://127.0.0.1:8788')
     .split(',')
     .map((value) => value.trim())
     .filter(Boolean),
@@ -22,6 +23,8 @@ const allowedOrigins = new Set(
 if (production && (hashSecret.length < 32 || statsKey.length < 32 || hashSecret === statsKey)) {
   throw new Error('Production analytics requires two different secrets of at least 32 characters.');
 }
+
+const sessionStore = new SessionStore();
 
 mkdirSync(dirname(databasePath), { recursive: true });
 const db = new DatabaseSync(databasePath);
@@ -121,29 +124,121 @@ async function readBody(request) {
 
 const server = createServer(async (request, response) => {
   const origin = request.headers.origin;
-  const url = new URL(request.url || '/', `http://${request.headers.host || 'localhost'}`);
+  const hostHeader = request.headers.host || 'localhost';
+  const url = new URL(request.url || '/', `http://${hostHeader}`);
+  const rawPath = url.pathname;
+  // Normalize route removing optional prefix /api/analytics or /analytics
+  const route = rawPath.replace(/^\/api\/analytics/, '').replace(/^\/analytics/, '') || '/';
 
   if (request.method === 'OPTIONS') {
-    if (!origin || !allowedOrigins.has(origin)) return json(response, 403, { error: 'Origin not allowed.' });
+    if (origin && !allowedOrigins.has(origin)) return json(response, 403, { error: 'Origin not allowed.' });
     response.writeHead(204, {
-      'Access-Control-Allow-Origin': origin,
+      'Access-Control-Allow-Origin': origin || '*',
       'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type, X-Stats-Key',
+      'Access-Control-Allow-Headers': 'Content-Type, X-Stats-Key, Authorization',
       'Access-Control-Max-Age': '86400',
       Vary: 'Origin',
     });
     return response.end();
   }
 
-  if (url.pathname === '/health' && request.method === 'GET') {
+  // Health check
+  if (route === '/health' && request.method === 'GET') {
     return json(response, 200, { ok: true }, origin);
   }
 
-  if (url.pathname === '/public' && request.method === 'GET') {
+  // Realtime API endpoint
+  if (route === '/realtime' && request.method === 'GET') {
+    return json(response, 200, sessionStore.getRealtime(), origin);
+  }
+
+  // CSV Export endpoint
+  if (route === '/export.csv' && request.method === 'GET') {
+    const csv = sessionStore.exportCsv();
+    const headers = {
+      'Content-Type': 'text/csv; charset=utf-8',
+      'Content-Disposition': 'attachment; filename="visitor_sessions.csv"',
+      'Cache-Control': 'no-store',
+    };
+    if (origin && allowedOrigins.has(origin)) {
+      headers['Access-Control-Allow-Origin'] = origin;
+      headers.Vary = 'Origin';
+    }
+    response.writeHead(200, headers);
+    response.end(csv);
+    return;
+  }
+
+  // JSON Export endpoint
+  if (route === '/export.json' && request.method === 'GET') {
+    const data = sessionStore.getAllSessions();
+    const headers = {
+      'Content-Type': 'application/json; charset=utf-8',
+      'Content-Disposition': 'attachment; filename="visitor_sessions.json"',
+      'Cache-Control': 'no-store',
+    };
+    if (origin && allowedOrigins.has(origin)) {
+      headers['Access-Control-Allow-Origin'] = origin;
+      headers.Vary = 'Origin';
+    }
+    response.writeHead(200, headers);
+    response.end(JSON.stringify(data, null, 2));
+    return;
+  }
+
+  // Anonymous Session Tracking: start
+  if (route === '/session/start' && request.method === 'POST') {
+    if (origin && !allowedOrigins.has(origin)) return json(response, 403, { error: 'Origin not allowed.' }, origin);
+    if (isBot(request.headers['user-agent'])) return json(response, 200, { ok: true, bot: true }, origin);
+    try {
+      const body = await readBody(request);
+      const session = await sessionStore.startSession({
+        sessionId: body.session_id,
+        path: body.path,
+      });
+      return json(response, 200, { ok: true, session }, origin);
+    } catch (error) {
+      return json(response, 400, { error: error.message || 'Invalid session payload.' }, origin);
+    }
+  }
+
+  // Anonymous Session Tracking: heartbeat
+  if (route === '/session/heartbeat' && request.method === 'POST') {
+    if (origin && !allowedOrigins.has(origin)) return json(response, 403, { error: 'Origin not allowed.' }, origin);
+    if (isBot(request.headers['user-agent'])) return json(response, 200, { ok: true, bot: true }, origin);
+    try {
+      const body = await readBody(request);
+      const session = await sessionStore.heartbeatSession({
+        sessionId: body.session_id,
+        path: body.path,
+      });
+      return json(response, 200, { ok: true, session }, origin);
+    } catch (error) {
+      return json(response, 400, { error: error.message || 'Invalid heartbeat payload.' }, origin);
+    }
+  }
+
+  // Anonymous Session Tracking: end
+  if (route === '/session/end' && request.method === 'POST') {
+    try {
+      const body = await readBody(request);
+      const session = await sessionStore.endSession({
+        sessionId: body.session_id,
+        path: body.path,
+      });
+      return json(response, 200, { ok: true, session }, origin);
+    } catch (error) {
+      return json(response, 400, { error: error.message || 'Invalid end payload.' }, origin);
+    }
+  }
+
+  // Existing Public stats
+  if (route === '/public' && request.method === 'GET') {
     return json(response, 200, publicStats(), origin);
   }
 
-  if (url.pathname === '/track' && request.method === 'POST') {
+  // Existing Track endpoint (for backward-compatible view counter)
+  if (route === '/track' && request.method === 'POST') {
     if (origin && !allowedOrigins.has(origin)) return json(response, 403, { error: 'Origin not allowed.' }, origin);
     if (isBot(request.headers['user-agent'])) return json(response, 200, { ...publicStats(), counted: false }, origin);
     try {
@@ -175,7 +270,8 @@ const server = createServer(async (request, response) => {
     }
   }
 
-  if (url.pathname === '/stats' && request.method === 'GET') {
+  // Existing Protected stats endpoint
+  if (route === '/stats' && request.method === 'GET') {
     const headerKey = request.headers['x-stats-key'];
     const bearer = request.headers.authorization?.startsWith('Bearer ') ? request.headers.authorization.slice(7) : '';
     if (!keysMatch(String(headerKey || bearer || ''))) {
@@ -200,6 +296,7 @@ server.listen(port, host, () => {
     console.warn('Analytics is using development secrets. Set ANALYTICS_HASH_SECRET and ANALYTICS_STATS_KEY before deployment.');
   }
   console.log(`NYA analytics listening at http://${host}:${port}`);
+  console.log(`Sessions file: ${sessionStore.sessionsFile}`);
   console.log(`SQLite database: ${databasePath}`);
 });
 

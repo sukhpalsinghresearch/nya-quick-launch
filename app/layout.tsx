@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { Hanken_Grotesk, Playfair_Display } from 'next/font/google';
 import './globals.css';
+import { AnonymousSessionTracker } from '@/components/analytics/anonymous-session-tracker';
 
 const hanken = Hanken_Grotesk({
   variable: '--font-hanken',
@@ -52,6 +53,7 @@ export default function RootLayout({
         />
       </head>
       <body className={`${hanken.variable} ${playfair.variable}`}>
+        <AnonymousSessionTracker />
         {children}
       </body>
     </html>
