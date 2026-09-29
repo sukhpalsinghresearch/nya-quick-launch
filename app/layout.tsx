@@ -28,6 +28,11 @@ export const metadata: Metadata = {
     description: 'For everyone who believes we can do better.',
     images: ['/og.png'],
   },
+  icons: {
+    icon: '/favicon.svg',
+    shortcut: '/favicon.ico',
+    apple: '/favicon.svg',
+  },
 };
 
 export default function RootLayout({
