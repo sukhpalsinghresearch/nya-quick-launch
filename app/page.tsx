@@ -46,27 +46,24 @@ export default function Home() {
       </section>
 
       <section className="bios-feature" aria-labelledby="bios-title">
-        <div className="bios-feature-mark" aria-hidden="true">
-          <span>BIOS</span>
-          <p>BRINGING INNOVATION ON-STAGE</p>
-        </div>
-        <div className="bios-feature-copy">
-          <p className="bios-label">BIOS V2 · THAPAR INSTITUTE, PATIALA</p>
-          <h2 id="bios-title">We are organising BIOS again this year.</h2>
-          <p>
-            BIOS brings students together to choose a real problem, build a
-            serious solution and put it on stage. Join a track, form your team
-            and take the idea beyond a saved document.
-          </p>
-          <div className="bios-facts" aria-label="About BIOS">
-            <span>Open to builders across disciplines</span>
-            <span>Teams, tracks and guided problem statements</span>
+        <a className="bios-art-link" href="https://bios.notyouraverage.xyz" target="_blank" rel="noreferrer" aria-label="Visit the BIOS hackathon website">
+          {/* oxlint-disable-next-line next/no-img-element -- local hero asset; next/image is incompatible with the current vinext dev runtime */}
+          <img src="/images/bios-landing-with-background.png" alt="BIOS, where life and computation meet" width="1679" height="943" />
+          <span>Enter the BIOS website <ExternalLink aria-hidden="true" /></span>
+        </a>
+        <div className="bios-teaser-copy">
+          <div>
+            <p className="bios-label">BIOS V2 · THAPAR INSTITUTE, PATIALA</p>
+            <h2 id="bios-title">Life meets computation.</h2>
+            <p>We are organising BIOS again this year. Choose a track, form a team and turn a real problem into something that works.</p>
           </div>
           <div className="bios-actions">
             <a className="bios-register" href="https://bios.notyouraverage.xyz/tracks" target="_blank" rel="noreferrer">
               Register for BIOS <ExternalLink aria-hidden="true" />
             </a>
-            <a href="https://bios.notyouraverage.xyz" target="_blank" rel="noreferrer">Explore BIOS</a>
+            <a className="bios-volunteer" href="https://csatnypudj.zite.so" target="_blank" rel="noreferrer">
+              Volunteer for BIOS <HandHeart aria-hidden="true" />
+            </a>
           </div>
         </div>
       </section>
