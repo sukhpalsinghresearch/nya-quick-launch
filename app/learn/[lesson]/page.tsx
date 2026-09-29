@@ -1,6 +1,5 @@
 import type { Metadata } from 'next';
 import { ArrowLeft, ArrowRight, BookOpen, Lightbulb } from 'lucide-react';
-import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
 import { LessonInteraction } from '@/components/learning/ucs503-interactions';
@@ -35,7 +34,7 @@ export default async function LessonPage({ params }: { params: Promise<{ lesson:
   return <main className="lesson-page">
     <SiteHeader active="resources" />
     <section className="lesson-hero">
-      <Link href="/resources" className="lesson-back"><ArrowLeft aria-hidden="true" /> UCS503 course map</Link>
+      <a href="/resources" className="lesson-back"><ArrowLeft aria-hidden="true" /> UCS503 course map</a>
       <p className="quick-kicker">{courseModule?.number} / {courseModule?.title.toUpperCase()} / {lesson.lecture}</p>
       <h1>{lesson.title}</h1>
       <p>{lesson.summary}</p>
@@ -47,7 +46,7 @@ export default async function LessonPage({ params }: { params: Promise<{ lesson:
       <article className="mistake-card"><h2>Common mistakes</h2><ul>{lesson.mistakes.map((item) => <li key={item}>{item}</li>)}</ul></article>
     </section>
     <LessonInteraction tool={lesson.tool} />
-    {diagramLinks.length > 0 && <section className="diagram-launch"><div><span>INTERACTIVE UML LAB</span><h2>Take this idea into the diagram.</h2><p>The lab uses familiar systems so you can inspect every actor, relationship, message and ownership handoff.</p></div><div className="diagram-launch-links">{diagramLinks.map((item) => <Link href={item.href} key={item.href}>{item.label} <ArrowRight aria-hidden="true" /></Link>)}</div></section>}
+    {diagramLinks.length > 0 && <section className="diagram-launch"><div><span>INTERACTIVE UML LAB</span><h2>Take this idea into the diagram.</h2><p>The lab uses familiar systems so you can inspect every actor, relationship, message and ownership handoff.</p></div><div className="diagram-launch-links">{diagramLinks.map((item) => <a href={item.href} key={item.href}>{item.label} <ArrowRight aria-hidden="true" /></a>)}</div></section>}
     <ResourceDeck resources={lessonResources[lesson.id] ?? []} />
     <SiteFooter />
   </main>;

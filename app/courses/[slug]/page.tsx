@@ -1,6 +1,5 @@
 import type { Metadata } from 'next';
 import { ArrowLeft, ArrowRight, Check, Network, UserRound } from 'lucide-react';
-import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
 import { SiteFooter, SiteHeader } from '@/app/site-chrome';
@@ -24,7 +23,7 @@ export default async function CoursePage({ params }: { params: Promise<{ slug: s
     <main>
       <SiteHeader active="courses" />
       <section className="course-hero course-hero-plum">
-        <Link className="course-back" href="/resources"><ArrowLeft aria-hidden="true" /> UCS503 resources</Link>
+        <a className="course-back" href="/resources"><ArrowLeft aria-hidden="true" /> UCS503 resources</a>
         <div className="course-title-row">
           <div>
             <p className="eyebrow">THAPAR / {course.code}</p>
@@ -57,7 +56,7 @@ export default async function CoursePage({ params }: { params: Promise<{ slug: s
             <article className="module-row module-live" key={module.number}>
               <span className="module-number">{module.number}</span>
               <div className="module-main"><div><span>{module.kind}</span></div><h3>{module.title}</h3><p>{module.question}</p></div>
-              <Link href={module.href}>Open module <ArrowRight aria-hidden="true" /></Link>
+              <a href={module.href}>Open module <ArrowRight aria-hidden="true" /></a>
             </article>
           ))}
         </div>
@@ -66,7 +65,7 @@ export default async function CoursePage({ params }: { params: Promise<{ slug: s
       <section className="course-lab-promo course-lab-promo-plum">
         <div><p className="eyebrow"><Network aria-hidden="true" /> INTERACTIVE UML LAB</p><h2>Choose the diagram, system and depth you need.</h2></div>
         <p>Use Classroom for exam revision. Expand into System Design when you want to inspect a larger product model.</p>
-        <Link href={`/courses/${course.slug}/system-lab`}>Open the UML lab <ArrowRight aria-hidden="true" /></Link>
+        <a href={`/courses/${course.slug}/system-lab`}>Open the UML lab <ArrowRight aria-hidden="true" /></a>
       </section>
       <SiteFooter />
     </main>

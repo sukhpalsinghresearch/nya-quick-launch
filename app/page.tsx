@@ -1,5 +1,4 @@
 import { ArrowRight, BookOpen, ExternalLink, HandHeart, TicketCheck } from 'lucide-react';
-import Link from 'next/link';
 
 import { SiteFooter, SiteHeader } from './site-chrome';
 
@@ -17,14 +16,14 @@ export default function Home() {
           around that belief.
         </p>
         <div className="hero-actions" aria-label="Start here">
-          <Link href="/resources" className="hero-action hero-action-primary">
+          <a href="/resources" className="hero-action hero-action-primary">
             <BookOpen aria-hidden="true" />
             <span>
               <small>EXAM RESOURCES</small>
               <strong>Study UCS503</strong>
             </span>
             <ArrowRight aria-hidden="true" />
-          </Link>
+          </a>
           <a className="hero-action" href="https://csatnypudj.zite.so" target="_blank" rel="noreferrer">
             <HandHeart aria-hidden="true" />
             <span>

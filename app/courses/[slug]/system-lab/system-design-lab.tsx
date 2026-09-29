@@ -2,7 +2,6 @@
 
 /* eslint-disable jsx-a11y/prefer-tag-over-role */
 
-import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import {
   ArrowLeft,
@@ -1386,10 +1385,10 @@ export function SystemDesignLab({
   return (
     <main className="depth-lab-page">
       <header className="depth-lab-header">
-        <Link href={`/courses/${courseSlug}`}>
+        <a href={`/courses/${courseSlug}`}>
           <ArrowLeft aria-hidden="true" />
           {thapar ? 'UCS503' : 'Software Engineering'}
-        </Link>
+        </a>
         <div>
           <span>INTERACTIVE UML EXPLORER</span>
           <strong>USE CASE / SEQUENCE / CLASS / ACTIVITY / SWIMLANE</strong>

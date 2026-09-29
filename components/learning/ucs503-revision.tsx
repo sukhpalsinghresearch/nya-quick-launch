@@ -1,7 +1,6 @@
 'use client';
 
 import { ArrowRight, Check, RotateCcw, X } from 'lucide-react';
-import Link from 'next/link';
 import { useMemo, useState } from 'react';
 
 type Question = {
@@ -193,7 +192,7 @@ export function Ucs503Revision() {
               return <button className={state} type="button" disabled={isRevealed} onClick={() => setAnswers((value) => ({ ...value, [index]: optionIndex }))} key={option}><span>{String.fromCharCode(65 + optionIndex)}</span>{option}{isRevealed && correctOption && <Check aria-label="Correct answer" />}{isRevealed && chosen && !correctOption && <X aria-label="Incorrect answer" />}</button>;
             })}
           </div>
-          <footer>{isRevealed ? <div className="revision-feedback"><p><strong>{selected === question.answer ? 'Correct.' : 'Review this one.'}</strong> {question.explanation}</p><Link href={`/learn/${question.lesson}`}>Open the lesson <ArrowRight aria-hidden="true" /></Link></div> : <button type="button" disabled={selected === undefined} onClick={() => setRevealed((value) => ({ ...value, [index]: true }))}>Check answer</button>}</footer>
+          <footer>{isRevealed ? <div className="revision-feedback"><p><strong>{selected === question.answer ? 'Correct.' : 'Review this one.'}</strong> {question.explanation}</p><a href={`/learn/${question.lesson}`}>Open the lesson <ArrowRight aria-hidden="true" /></a></div> : <button type="button" disabled={selected === undefined} onClick={() => setRevealed((value) => ({ ...value, [index]: true }))}>Check answer</button>}</footer>
         </article>;
       })}
     </div>

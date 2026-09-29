@@ -1,6 +1,5 @@
 import type { Metadata } from 'next';
 import { ArrowRight, BookOpen, Route } from 'lucide-react';
-import Link from 'next/link';
 
 import { SiteFooter, SiteHeader } from '@/app/site-chrome';
 import { Ucs503Revision } from '@/components/learning/ucs503-revision';
@@ -14,7 +13,7 @@ export default function RevisionPage() {
   return <main className="lesson-page revision-page">
     <SiteHeader active="resources" />
     <section className="lesson-hero revision-hero">
-      <Link href="/resources" className="lesson-back"><Route aria-hidden="true" /> UCS503 course map</Link>
+      <a href="/resources" className="lesson-back"><Route aria-hidden="true" /> UCS503 course map</a>
       <p className="quick-kicker">UCS503 / EXAM REVISION</p>
       <h1>Revise the decision,<br /><em>not the label.</em></h1>
       <p>Use this after you have walked the module map. A wrong answer should tell you which concept or diagram to reopen.</p>
@@ -24,7 +23,7 @@ export default function RevisionPage() {
       <article><ArrowRight aria-hidden="true" /><h2>After each answer</h2><p>Go back to the relevant lesson only when the explanation exposes a gap. This keeps revision focused.</p></article>
     </section>
     <Ucs503Revision />
-    <section className="diagram-launch"><div><span>NEED A DIAGRAM DRILL?</span><h2>Practice one scenario across five views.</h2><p>Use the connected UML studio for use case, sequence, class, activity and swimlane diagrams.</p></div><Link href="/courses/ucs503-software-engineering">Open the UML lab <ArrowRight aria-hidden="true" /></Link></section>
+    <section className="diagram-launch"><div><span>NEED A DIAGRAM DRILL?</span><h2>Practice one scenario across five views.</h2><p>Use the connected UML studio for use case, sequence, class, activity and swimlane diagrams.</p></div><a href="/courses/ucs503-software-engineering">Open the UML lab <ArrowRight aria-hidden="true" /></a></section>
     <SiteFooter />
   </main>;
 }
