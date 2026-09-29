@@ -42,7 +42,6 @@ export default function Home() {
             <ExternalLink aria-hidden="true" />
           </a>
         </div>
-        <p className="platform-note">THE FULL NYA PLATFORM IS COMING SOON</p>
       </section>
 
       <section className="bios-feature" aria-labelledby="bios-title">
@@ -65,32 +64,6 @@ export default function Home() {
               Volunteer for BIOS <HandHeart aria-hidden="true" />
             </a>
           </div>
-        </div>
-      </section>
-
-      <section className="volunteer-callout" aria-labelledby="volunteer-title">
-        <div>
-          <p className="quick-kicker">BIOS VOLUNTEERS</p>
-          <h2 id="volunteer-title">Want to volunteer for BIOS? <em>Be Not Average.</em></h2>
-        </div>
-        <div className="volunteer-callout-copy">
-          <p>
-            Work starts immediately. During MSTs, the workload stays limited.
-            After MSTs, it is all hands on deck until 1 November.
-          </p>
-          <p>
-            Prior experience is not required. Dedication, consistency,
-            reliability and ownership are.
-          </p>
-          <strong>Write your answers yourself. AI-generated responses may be rejected.</strong>
-          <a
-            className="volunteer-apply"
-            href="https://csatnypudj.zite.so"
-            target="_blank"
-            rel="noreferrer"
-          >
-            Apply to volunteer <ExternalLink aria-hidden="true" />
-          </a>
         </div>
       </section>
 
