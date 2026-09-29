@@ -1,4 +1,4 @@
-import { ArrowRight, BookOpen, GraduationCap, TimerReset } from 'lucide-react';
+import { ArrowRight, BookOpen, GraduationCap, Network, TimerReset } from 'lucide-react';
 import Link from 'next/link';
 
 import { SiteFooter, SiteHeader } from '@/app/site-chrome';
@@ -21,6 +21,9 @@ const diagramPractice = [
   { name: 'Component and deployment', level: 'guided explorer', href: '/learn/component-deployment', question: 'What is the software split, and where does it run?' },
 ];
 
+const connectedDiagrams = diagramPractice.slice(0, 5);
+const guidedDiagrams = diagramPractice.slice(5);
+
 export default function ResourcesPage() {
   return <main className="quick-site ucs503-page">
     <SiteHeader active="resources" />
@@ -28,6 +31,28 @@ export default function ResourcesPage() {
       <p className="quick-kicker"><GraduationCap aria-hidden="true" /> UCS503 · SOFTWARE ENGINEERING</p>
       <h1>Understand the system<br /><em>before you draw it.</em></h1>
       <p>Process models explain how the work moves. Requirements explain what the system must achieve. UML makes the behaviour, structure and deployment visible.</p>
+    </section>
+    <section className="studio-gateway" aria-labelledby="studio-gateway-title">
+      <div className="studio-gateway-copy">
+        <p className="quick-kicker"><Network aria-hidden="true" /> INTERACTIVE DIAGRAM STUDIO</p>
+        <h2 id="studio-gateway-title">Choose a system. Choose a scenario. Draw every connected view.</h2>
+        <p>
+          This is the complete lab built around Instagram, Spotify, Uber, Ola and other familiar systems.
+          Change the scenario, then switch between Classroom, System Design and Near Exhaustive depth.
+        </p>
+        <Link className="studio-primary-link" href="/courses/ucs503-software-engineering/system-lab">
+          Open the complete studio <ArrowRight aria-hidden="true" />
+        </Link>
+      </div>
+      <div className="studio-diagram-links">
+        {connectedDiagrams.map((item, index) => (
+          <Link href={item.href} key={item.name}>
+            <small>0{index + 1}</small>
+            <span><strong>{item.name}</strong><em>{item.question}</em></span>
+            <ArrowRight aria-hidden="true" />
+          </Link>
+        ))}
+      </div>
     </section>
     <section className="revision-strip"><TimerReset aria-hidden="true" /><div><span>EXAM REVISION PATH</span><strong>Start with the module you need, then use a worked interaction to test the idea.</strong></div><Link href="/revision">Start a 15-minute revision <ArrowRight aria-hidden="true" /></Link></section>
     <section className="module-map" id="course-map">
@@ -38,10 +63,10 @@ export default function ResourcesPage() {
       </article>)}
     </section>
     <section className="diagram-practice-index">
-      <header><span>DIAGRAM PRACTICE</span><h2>Choose the question, then open the right diagram.</h2><p>Full studios let you change the platform, scenario and depth. Guided exercises teach one notation rule at a time.</p></header>
-      <div>{diagramPractice.map((item) => <Link href={item.href} key={item.name}><small>{item.level}</small><h3>{item.name}</h3><p>{item.question}</p><ArrowRight aria-hidden="true" /></Link>)}</div>
+      <header><span>MORE DIAGRAMS</span><h2>Continue beyond the connected UML studio.</h2><p>These guided exercises cover data flow, object collaboration, state changes, components and deployment.</p></header>
+      <div>{guidedDiagrams.map((item) => <Link href={item.href} key={item.name}><small>{item.level}</small><h3>{item.name}</h3><p>{item.question}</p><ArrowRight aria-hidden="true" /></Link>)}</div>
     </section>
-    <section className="course-entry"><BookOpen aria-hidden="true" /><div><span>CONNECTED DIAGRAM STUDIO</span><h2>Use one scenario across five live diagrams.</h2></div><Link href="/courses/ucs503-software-engineering">Open the UML lab <ArrowRight aria-hidden="true" /></Link></section>
+    <section className="course-entry"><BookOpen aria-hidden="true" /><div><span>CONNECTED DIAGRAM STUDIO</span><h2>Use one scenario across five live diagrams.</h2></div><Link href="/courses/ucs503-software-engineering/system-lab">Open the UML lab <ArrowRight aria-hidden="true" /></Link></section>
     <SiteFooter />
   </main>;
 }
